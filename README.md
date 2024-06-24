@@ -1,6 +1,8 @@
 # EconMetrics
 Carson Wolber summer 2024 Meta University Capstone Project
 
+## Project Planner Doc 
+https://docs.google.com/document/d/1x0Bo--S4QJQHxFEerv1K9MrlYiCxGJDZhKDZ9Rg-dz0/edit?usp=sharing
 
 ## Figma Wireframes for Codepath
 
