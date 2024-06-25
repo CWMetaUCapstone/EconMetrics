@@ -5,3 +5,5 @@ function Profile() {
         <p>welcome to your profile</p>
     )
 }
+
+export default Profile;

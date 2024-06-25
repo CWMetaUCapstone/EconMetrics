@@ -5,3 +5,5 @@ function Home() {
         <p>this is my home page</p>
     )
 }
+
+export default Home;
