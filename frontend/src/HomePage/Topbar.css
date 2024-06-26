@@ -3,5 +3,33 @@
     margin: 0;
     width: 100%;
     position: fixed;
-    top: 0;
+    height: 95px;
+    align-items: center;
+    justify-content: center;
   }
+
+
+.topname {
+    font-family: "Playwrite NG Modern", cursive;
+    font-size: 30pt;
+    vertical-align: baseline;
+    justify-content: center;
+    align-items: center;
+    margin-left: 1%;
+    margin-top: 0.5%;
+    color: #8CCB5E;
+}
+
+
+svg {
+    float: left;
+    margin-top: .5%;
+    margin-left: 10%;
+    width: 3%;
+    display: block;
+    height: auto;
+}
+
+.logo {
+    cursor: pointer;
+}
