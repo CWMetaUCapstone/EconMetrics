@@ -1,0 +1,31 @@
+.input {
+    background-color: transparent;
+    border: none;
+    color: #F7F9FB;
+    font-size: 13pt;
+    font-family: "Inter Tight", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    width: 260px;
+}
+
+.input::placeholder {
+    color: #dcdcdc;
+}
+
+.input:focus {
+    outline: none;
+}
+
+.searchbar {
+    background-color: #708090;
+    padding: 0.5%;
+    width: 20%;
+    border-radius: 12px;
+}
+
+.icon {
+    float: left;
+    margin-top: 1.5%;
+    margin-right: 2%;
+}

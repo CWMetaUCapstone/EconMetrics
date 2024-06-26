@@ -1,0 +1,60 @@
+.bar {
+    background-color: #536878;
+    margin: 0;
+    width: 100%;
+    position: fixed;
+    height: 95px;
+    align-items: center;
+    display: flex
+  }
+
+
+.topname {
+    font-family: "Playwrite NG Modern", cursive;
+    font-size: 30pt;
+    vertical-align: baseline;
+    justify-content: center;
+    align-items: center;
+    color: #8CCB5E;
+    margin-right: 1.5%;
+}
+
+
+.logo svg {
+    float: left;
+    width: 100%;
+    display: block;
+    margin-right: 20%;
+}
+
+.logo {
+    cursor: pointer;
+    margin-left: 15%;
+}
+
+button {
+    padding: 1%;
+    border-radius: 10px;
+    border: none;
+    font-family: "Inter Tight", sans-serif;
+}
+
+.signinbtn {
+    margin-left: 20%;
+    margin-right: .5%;
+    background-color: #cfd6dc;
+    color: #36454f
+}
+
+.signinbtn:hover {
+    background-color: #bec5cb;
+}
+
+.signupbtn {
+    background-color: #36454f;
+    color: #f7f9fb;
+}
+
+.signupbtn:hover {
+    background-color: #47565f;
+}
