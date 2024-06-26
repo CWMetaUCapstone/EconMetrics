@@ -1,4 +1,4 @@
-import Topbar from './Topbar'
+import Topbar from './Top/Topbar'
 import './Home.css'
 
 function Home() { 

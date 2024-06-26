@@ -5,7 +5,7 @@
     position: fixed;
     height: 95px;
     align-items: center;
-    justify-content: center;
+    display: flex
   }
 
 
@@ -15,21 +15,19 @@
     vertical-align: baseline;
     justify-content: center;
     align-items: center;
-    margin-left: 1%;
-    margin-top: 0.5%;
     color: #8CCB5E;
+    margin-right: 1.5%;
 }
 
 
-svg {
+.logo svg {
     float: left;
-    margin-top: .5%;
-    margin-left: 10%;
-    width: 3%;
+    width: 100%;
     display: block;
-    height: auto;
+    margin-right: 20%;
 }
 
 .logo {
     cursor: pointer;
+    margin-left: 15%;
 }

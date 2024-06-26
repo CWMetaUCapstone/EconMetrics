@@ -2,4 +2,5 @@ body {
   background-color: #F7F9FB;
   margin: 0;
   padding: 0;
+  display: flex;
 }
