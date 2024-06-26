@@ -11,6 +11,10 @@ function Topbar() {
             </div>
             <p className='topname'>EconMetrics</p>
             <Search/>
+
+            <button className='signinbtn'>Sign In</button>
+            <button className='signupbtn'>Sign Up</button>
+
         </div>
     )
 }
