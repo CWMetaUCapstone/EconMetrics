@@ -54,3 +54,7 @@
 .signupformbtn:hover{
     background-color:#506070;
 }
+
+input:focus {
+    outline: #708090;
+}
