@@ -15,7 +15,7 @@ function SignUp() {
                         <input type="text" placeholder='Email Address' required/>
                         <label>Password</label>
                         <input type="password" placeholder='Password' required/>
-                        <button type='submit' className='signupformbtn'>Sign Up</button>
+                        <button type='submit' className='signupformbtn' onClick={submitProfile}>Sign Up</button>
                     </form>
                 </div>
             </div>
