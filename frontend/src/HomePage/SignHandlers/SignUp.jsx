@@ -1,7 +1,31 @@
 import Topbar from '../Top/Topbar';
+import { submitProfile } from '../../../utils';
 import './SignUp.css'
 
 function SignUp() {
+    /* Function to handle the immedate submision of profile creation form
+    extracts from the inputs and updates the state to track data
+    accordingly and passes this info onto the client-side endpoint helper [submitProfile]
+    */
+    const handleSignUp = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const userData = {
+            email: form.elements.email.value,
+            password: form.elements.password.value
+        };
+        try {
+            await submitProfile(userData);
+            // TODO: if successful user should be redirected to continue sign up process (i.e. uploading more profile info/ plaid account link)
+        } catch(error) {
+            console.error('sign up fail', error)
+            alert('Failed to Sign Up') // This will be replaced with more robust handling (e.g. being explicit about using an already registerd email)
+        }
+
+    }
+
+
+
     return (
         <>  
             <div className='topbar'>
@@ -10,12 +34,12 @@ function SignUp() {
             <div className='signupview'>
                 <div className='signupcontent'>
                     <h2>Sign Up</h2>
-                    <form>
+                    <form onSubmit={handleSignUp}>
                         <label>Email</label>
-                        <input type="text" placeholder='Email Address' required/>
+                        <input type="text" placeholder='Email Address' name='email' required/>
                         <label>Password</label>
-                        <input type="password" placeholder='Password' required/>
-                        <button type='submit' className='signupformbtn' onClick={submitProfile}>Sign Up</button>
+                        <input type="password" placeholder='Password' name='password' required/>
+                        <button type='submit' className='signupformbtn'>Sign Up</button>
                     </form>
                 </div>
             </div>
