@@ -1,0 +1,21 @@
+.createaccountview {
+    z-index: 100;
+    font-family: "Inter Tight", sans-serif;
+    margin-top: 95px;
+    font-weight: 400;
+    background-color: #fefefe ;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+
+.createaccountcontent {
+    margin-top: 5%;
+    margin-left: 38vw;
+}
+
+.createaccountcontent h2 {
+    font-weight: 400;
+    margin-bottom: 8%;
+}

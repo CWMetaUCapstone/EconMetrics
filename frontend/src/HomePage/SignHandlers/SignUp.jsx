@@ -21,7 +21,6 @@ function SignUp() {
         try {
             await submitProfile(userData);
             navigate('/createprofile');
-            // TODO: if successful user should be redirected to continue sign up process (i.e. uploading more profile info/ plaid account link)
         } catch(error) {
             console.error('sign up fail', error)
             alert('Failed to Sign Up') // This will be replaced with more robust handling (e.g. being explicit about using an already registerd email)
