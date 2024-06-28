@@ -22,5 +22,8 @@ model User {
   roommates Int
   children  Int
   job      String
-  transactions  Transactions @relation(fields: [userId], references: [id])
+}
+
+model Transactions {
+
 }
