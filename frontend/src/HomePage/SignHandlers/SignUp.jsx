@@ -1,8 +1,12 @@
 import Topbar from '../Top/Topbar';
 import { submitProfile } from '../../../utils';
+import { useNavigate } from 'react-router-dom';
 import './SignUp.css'
 
 function SignUp() {
+
+    const navigate = useNavigate(); 
+
     /* Function to handle the immedate submision of profile creation form
     extracts from the inputs and updates the state to track data
     accordingly and passes this info onto the client-side endpoint helper [submitProfile]
@@ -16,6 +20,7 @@ function SignUp() {
         };
         try {
             await submitProfile(userData);
+            navigate('/createprofile');
             // TODO: if successful user should be redirected to continue sign up process (i.e. uploading more profile info/ plaid account link)
         } catch(error) {
             console.error('sign up fail', error)
