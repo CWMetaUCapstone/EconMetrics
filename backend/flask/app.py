@@ -11,6 +11,11 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    city = db.Column(db.String(120))
+    salary = db.Column(db.String(120))
+    roommates = db.Column(db.Integer)
+    children = db.Column(db.Integer)
+    job = db.Column(db.String(120))
 
 @app.route('/profiles', methods=['POST'])
 def post_req_handler():
