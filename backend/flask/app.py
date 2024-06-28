@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import bcrypt
 
 app = Flask(__name__)
 CORS(app)
@@ -22,7 +23,10 @@ class User(db.Model):
 def post_req_handler():
     data = request.get_json()
     try:
-        user = User(email=data['email'], password=data['password'])
+        plain_password=data['password'].encode('utf-8')
+        hashed_password = bcrypt.hashpw(plain_password, bcrypt.gensalt())
+        encrypted_password = hashed_password.decode('utf-8')
+        user = User(email=data['email'], password=encrypted_password)
         db.session.add(user)
         db.session.commit()
         return jsonify({'message': 'Data saved!'})
