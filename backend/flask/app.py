@@ -4,8 +4,6 @@ from sqlalchemy import PickleType
 from flask_cors import CORS
 import json
 
-
-
 app = Flask(__name__)
 CORS(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:blu3Song85@localhost:5432/econmetrics"
