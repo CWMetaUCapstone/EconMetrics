@@ -1,5 +1,5 @@
 import Topbar from '../Top/Topbar';
-import { submitProfile } from '../../../utils';
+import { submitProfile } from '../../../HelperFuncs/utils';
 import { useNavigate } from 'react-router-dom';
 import './SignUp.css'
 

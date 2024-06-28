@@ -1,0 +1,46 @@
+.form-page label {
+    font-size: 11pt;
+    display: block;
+    margin-top: 4%;
+    margin-bottom: 4%;
+}
+
+.form-page input {
+    font-size: 13pt;
+    width: 20vw;
+    padding: 4%;
+    border-radius: 12px;
+    border: none;
+    background-color: #f7f9fb;
+}
+
+.salary-selector {
+    margin-top: 10%;
+    background-color: #f7f9fb;
+    padding: 2%;
+    border-radius: 12px;
+    width: 22vw;
+}
+
+.form-page {
+    display: flex;
+    flex-direction: row;
+    gap: 5vw;
+}
+
+.continuebtn {
+    margin-top: 7%;
+    display: flex;
+    width: 8vw;
+    padding: 2%;
+    text-align: center;
+    justify-content: center;
+    background-color: #708090;
+    color: #fefefe;
+    font-size: 12pt;
+    margin-left: 38vw;
+}
+
+.continuebtn:hover{
+    background-color:#506070;
+}

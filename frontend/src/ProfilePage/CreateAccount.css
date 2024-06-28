@@ -12,10 +12,15 @@
 
 .createaccountcontent {
     margin-top: 5%;
-    margin-left: 38vw;
+    margin-left: 28vw;
 }
 
 .createaccountcontent h2 {
     font-weight: 400;
     margin-bottom: 8%;
+}
+
+.createaccountcontent {
+    height: 60vh;
+    padding-top: 1%;
 }
