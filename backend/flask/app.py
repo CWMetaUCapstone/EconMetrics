@@ -8,14 +8,15 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:blu3Song85@localh
 db = SQLAlchemy(app)
 
 class User(db.Model):
+    __tablename__ = 'User'  # because of difference in sqlalchemy and prisma naming conventions, name needs to be explicit
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    city = db.Column(db.String(120))
-    salary = db.Column(db.String(120))
-    roommates = db.Column(db.Integer)
-    children = db.Column(db.Integer)
-    job = db.Column(db.String(120))
+    city = db.Column(db.String(120), nullable=True) 
+    salary = db.Column(db.String(120), nullable=True) 
+    roommates = db.Column(db.Integer, nullable=True)
+    children = db.Column(db.Integer, nullable=True)
+    job = db.Column(db.String(120), nullable=True)
 
 @app.route('/profiles', methods=['POST'])
 def post_req_handler():
