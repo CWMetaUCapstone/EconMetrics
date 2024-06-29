@@ -4,6 +4,7 @@ import PageOne from './FormPages/PageOne';
 import PageTwo from './FormPages/PageTwo';
 import { useState } from 'react';
 
+
 function CreateAccount() {
 
     // use this state object to track the current page of form
@@ -26,9 +27,9 @@ function CreateAccount() {
             <div className='createaccountview'>
                 <div className='createaccountcontent'>
                     <h2>Create Account</h2>
-                    <form className='multiPageForm'>
+                    <div className='pages'>
                         {page == 1 ? <PageOne nextPage={nextPage}/> : <PageTwo nextPage={nextPage} backPage={backPage}/>}
-                    </form>
+                    </div>
                 </div>
             </div>
         </>
