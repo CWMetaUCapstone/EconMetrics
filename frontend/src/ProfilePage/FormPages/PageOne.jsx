@@ -17,7 +17,8 @@ function PageOne( {nextPage} ) {
         city : '' , 
         roommates : 0,
         children : 0, 
-        salary : ''
+        salary : '',
+        job: ''
     })
 
     const { userId } = useParams();
@@ -88,6 +89,8 @@ function PageOne( {nextPage} ) {
                     <div className='part-two'>
                         <label>Number of Children/Dependents</label>
                         <input type='number' name="children" placeholder='Children and Dependents' onChange={handleInputChange} required></input>
+                        <label>Job Title</label>
+                        <input type="text" name="job" placeholder='Job Title' onChange={handleInputChange} required></input>
                         <Select
                             placeholder="Salary Range"
                             closeMenuOnSelect={true}
