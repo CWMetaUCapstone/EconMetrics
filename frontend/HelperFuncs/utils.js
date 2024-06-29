@@ -25,9 +25,9 @@ export const submitProfile = async (userData) => {
 helper function to make put request to update user data with profile info 
 from account creation form
 */
-export const populateAccount = async (userData) => { 
+export const populateAccount = async (userData, userId) => { 
     try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/profiles/:userId`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/profiles/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

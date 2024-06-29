@@ -29,7 +29,8 @@ def post_req_handler():
         user = User(email=data['email'], password=encrypted_password)
         db.session.add(user)
         db.session.commit()
-        return jsonify({'message': 'Data saved!'})
+        #return the users id so they can be later identified
+        return jsonify({'message': 'Data saved!', 'userId': user.id}), 201 
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

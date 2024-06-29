@@ -2,10 +2,22 @@ import './PageOne.css'
 import Select from 'react-select'
 import makeAnimated from 'react-select/animated';
 import { populateAccount } from '../../../HelperFuncs/utils';
+import { useState } from 'react';
 
 function PageOne( {nextPage} ) {
 
     const animated = makeAnimated();
+
+    /* 
+    because the form is divided into two divs, accessing the form values is more
+    nuanced requiring the use of this state object to track values
+    */
+    const [formData, setFormData] = useState({
+        city : '' , 
+        roommates : 0,
+        children : 0, 
+        salary : ''
+    })
 
     /* 
     salary ranges are based on 2022 single-filer us tax brackets
@@ -27,23 +39,25 @@ function PageOne( {nextPage} ) {
     said list to [handleAccount] helper to interact with server-side
     */
    const handleAccount = async (e) => {
-    e.preventDefault();
-    const form = e.target; 
-    const userData = {
-        roommates: form.element.roommates.value,
-        city: form.element.address.value, // this is a placeholder, once places api is up this will pull the city out of address
-        children: form.element.children.value,
-        salary: form.element.salary.value
-    };
-    try {
-        await handleAccount(userData)
-        nextPage()
-    }
-    catch(error) {
-        console.error('account put fail', error)
-        alert('Failed to Add Account')
+        e.preventDefault();
+        const form = e.target; 
+        // retrieve userId from storage
+        const userId = sessionStorage.getItem('userId'); 
+        const userData = {
+            roommates: form.element.roommates.value,
+            city: form.element.address.value, // this is a placeholder, once places api is up this will pull the city out of address
+            children: form.element.children.value,
+            salary: form.element.salary.value
+        };
+        try {
+            await populateAccount(userData, userId)
+            nextPage()
+        }
+        catch(error) {
+            console.error('account put fail', error)
+            alert('Failed to Add Account')
 
-    }
+        }
    }
 
     return (
