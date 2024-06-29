@@ -1,6 +1,7 @@
 import './PageOne.css'
 import Select from 'react-select'
 import makeAnimated from 'react-select/animated';
+import { populateAccount } from '../../../HelperFuncs/utils';
 
 function PageOne( {nextPage} ) {
 
@@ -20,29 +21,57 @@ function PageOne( {nextPage} ) {
         {value: '≥ $539,901', label: '≥ $539,901'}
     ]
 
+
+    /* 
+    function to handle form submission, processes form data into a dict [userData] and sends
+    said list to [handleAccount] helper to interact with server-side
+    */
+   const handleAccount = async (e) => {
+    e.preventDefault();
+    const form = e.target; 
+    const userData = {
+        roommates: form.element.roommates.value,
+        city: form.element.address.value, // this is a placeholder, once places api is up this will pull the city out of address
+        children: form.element.children.value,
+        salary: form.element.salary.value
+    };
+    try {
+        await handleAccount(userData)
+        nextPage()
+    }
+    catch(error) {
+        console.error('account put fail', error)
+        alert('Failed to Add Account')
+
+    }
+   }
+
     return (
         <>
-            <div className='form-page'> 
-                <div className='part-one'>
-                    <label>Number of Roommates</label>
-                    <input type='number' name="roommates" placeholder='Roommates' required></input>
-                    <label>Address</label>
-                    <input type='text' name="address" placeholder='Address' required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
-                </div>
-                <div className='part-two'>
-                    <label>Number of Children/Dependents</label>
-                    <input type='number' name="children" placeholder='Children and Dependents' required></input>
-                    <Select
-                        placeholder="Salary Range"
-                        closeMenuOnSelect={true}
-                        components={animated}
-                        options={salary_ranges}
-                        className='salary-selector'
-                        isClearable={true}
-                    />
-                </div>
-        </div>
-        <button className="continuebtn" onClick={nextPage}>Continue</button>
+        <form onSubmit={handleAccount}>
+                <div className='form-page'> 
+                    <div className='part-one'>
+                        <label>Number of Roommates</label>
+                        <input type='number' name="roommates" placeholder='Roommates' required></input>
+                        <label>Address</label>
+                        <input type='text' name="address" placeholder='Address' required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
+                    </div>
+                    <div className='part-two'>
+                        <label>Number of Children/Dependents</label>
+                        <input type='number' name="children" placeholder='Children and Dependents' required></input>
+                        <Select
+                            placeholder="Salary Range"
+                            closeMenuOnSelect={true}
+                            components={animated}
+                            options={salary_ranges}
+                            className='salary-selector'
+                            isClearable={true}
+                            name='salary'
+                        />
+                    </div>
+            </div>
+            <button type='submit' className="continuebtn">Continue</button>
+        </form>
         </>
         
     )
