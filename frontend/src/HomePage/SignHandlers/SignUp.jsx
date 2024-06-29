@@ -21,15 +21,12 @@ function SignUp() {
         };
         try {
             const response = await submitProfile(userData);
-            const data = await response.json();
-            if(response.ok) {
-                // locally store user id upon creation so it can be referenced later
-                sessionStorage.setItem('userId', data.userId) 
-                navigate('/createprofile');
-            }
+            const data  = await response.json();
+            const id = data.userId
+            navigate(`/createprofile/${id}`);
         } catch(error) {
             console.error('sign up fail', error)
-            alert('Failed to Sign Up') // this will be replaced with more robust handling (e.g. being explicit about using an already registerd email)
+            alert('Failed to Sign Up') // This will be replaced with more robust handling (e.g. being explicit about using an already registerd email)
         }
 
     }
