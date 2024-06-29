@@ -32,6 +32,7 @@ def post_req_handler():
         #return the users id so they can be later identified
         return jsonify({'message': 'Data saved!', 'userId': user.id}), 201 
     except Exception as e:
+        app.logger.error(f"Failed to create profile: {str(e)}")
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
@@ -48,16 +49,9 @@ def put_req_handler(userId):
 
         db.session.commit()
         return jsonify({'message': 'account made'}), 200
-
-
-
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-
-        # user = User(city=data['city'], salary=data['salary'], roommates=data['roommates'], 
-        #             children=data['children'], job=data['job'])
-        # db.session.
 
 def create_app():
     return app
@@ -66,4 +60,5 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         db.create_all()
+        print("Starting Flask server on port 3000")
         app.run(port=3000)

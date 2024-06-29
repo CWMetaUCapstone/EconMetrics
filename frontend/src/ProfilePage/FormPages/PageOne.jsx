@@ -84,7 +84,7 @@ function PageOne( {nextPage} ) {
                         <label>Number of Roommates</label>
                         <input type='number' name="roommates" placeholder='Roommates' onChange={handleInputChange} required></input>
                         <label>Address</label>
-                        <input type='text' name="address" placeholder='Address'  onChange={handleInputChange} required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
+                        <input type='text' name="city" placeholder='Address'  onChange={handleInputChange} required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
                     </div>
                     <div className='part-two'>
                         <label>Number of Children/Dependents</label>
