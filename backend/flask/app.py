@@ -53,6 +53,18 @@ def put_req_handler(userId):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/login', methods=['POST'])
+def login_post_handler():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password').encode('utf-8')
+    user = User.query.filter_by(email=email).first()
+    if user and bcrypt.checkpw(password, user.password.encode('utf-8')):
+        return jsonify({'message': 'Login successful', 'userId': user.id}), 202
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
+
 def create_app():
     return app
 
