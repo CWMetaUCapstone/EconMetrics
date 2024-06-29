@@ -3,6 +3,7 @@ import Select from 'react-select'
 import makeAnimated from 'react-select/animated';
 import { populateAccount } from '../../../HelperFuncs/utils';
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 function PageOne( {nextPage} ) {
 
@@ -18,6 +19,8 @@ function PageOne( {nextPage} ) {
         children : 0, 
         salary : ''
     })
+
+    const { userId } = useParams();
 
     /* 
     salary ranges are based on 2022 single-filer us tax brackets
@@ -40,8 +43,6 @@ function PageOne( {nextPage} ) {
     */
    const handleAccount = async (e) => {
         e.preventDefault();
-        // retrieve userId from storage
-        const userId = sessionStorage.getItem('userId'); 
         try {
             await populateAccount(formData, userId)
             nextPage()

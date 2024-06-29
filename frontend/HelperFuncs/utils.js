@@ -22,7 +22,6 @@ export const submitProfile = async (userData) => {
 }
 
 
-
 /* 
 helper function to make put request to update user data with profile info 
 from account creation form

@@ -35,6 +35,8 @@ def post_req_handler():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
+
 def create_app():
     return app
 
