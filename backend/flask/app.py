@@ -35,7 +35,29 @@ def post_req_handler():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/profiles/<userId>', methods=['PUT'])
+def put_req_handler(userId):
+    data = request.get_json()
+    try:
+        user = User.query.get(userId)
+        user.city=data['city']
+        user.salary=data['salary']
+        user.roommates=data['roommates']
+        user.children=data['children']
+        user.job=data['job']
 
+        db.session.commit()
+        return jsonify({'message': 'account made'}), 200
+
+
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+        # user = User(city=data['city'], salary=data['salary'], roommates=data['roommates'], 
+        #             children=data['children'], job=data['job'])
+        # db.session.
 
 def create_app():
     return app
