@@ -29,10 +29,41 @@ def post_req_handler():
         user = User(email=data['email'], password=encrypted_password)
         db.session.add(user)
         db.session.commit()
-        return jsonify({'message': 'Data saved!'})
+        #return the users id so they can be later identified
+        return jsonify({'message': 'Data saved!', 'userId': user.id}), 201 
+    except Exception as e:
+        app.logger.error(f"Failed to create profile: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/profiles/<userId>', methods=['PUT'])
+def put_req_handler(userId):
+    data = request.get_json()
+    try:
+        user = User.query.get(userId)
+        user.city=data['city']
+        user.salary=data['salary']
+        user.roommates=data['roommates']
+        user.children=data['children']
+        user.job=data['job']
+
+        db.session.commit()
+        return jsonify({'message': 'account made'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/login', methods=['POST'])
+def login_post_handler():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password').encode('utf-8')
+    user = User.query.filter_by(email=email).first()
+    if user and bcrypt.checkpw(password, user.password.encode('utf-8')):
+        return jsonify({'message': 'Login successful', 'userId': user.id}), 202
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
 
 def create_app():
     return app
@@ -41,4 +72,5 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         db.create_all()
+        print("Starting Flask server on port 3000")
         app.run(port=3000)

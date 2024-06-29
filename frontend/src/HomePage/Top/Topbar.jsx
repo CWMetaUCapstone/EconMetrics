@@ -16,7 +16,7 @@ function Topbar() {
             <p className='topname' onClick={() => navigate('/home')}>EconMetrics</p>
             <Search/>
 
-            <button className='signinbtn'>Sign In</button>
+            <button className='signinbtn' onClick={() => navigate('/signin')}>Sign In</button>
             <button className='signupbtn' onClick={() => navigate('/signup')}>Sign Up</button>
 
         </div>

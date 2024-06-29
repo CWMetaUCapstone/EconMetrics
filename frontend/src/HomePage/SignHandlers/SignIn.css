@@ -1,0 +1,60 @@
+.topbar {
+    display: block;
+}
+
+.signinview {
+    z-index: 100;
+    font-family: "Inter Tight", sans-serif;
+    margin-top: 95px;
+    font-weight: 400;
+    background-color: #fefefe ;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+.signincontent {
+    margin-top: 5%;
+    margin-left: 38vw;
+}
+
+.signincontent h2 {
+    font-weight: 400;
+    margin-bottom: 8%;
+}
+
+.signincontent label {
+    font-size: 11pt;
+    display: block;
+    margin-top: 4%;
+    margin-bottom: 4%;
+}
+
+.signincontent input {
+    font-size: 13pt;
+    width: 20vw;
+    padding: 4%;
+    border-radius: 12px;
+    border: none;
+    background-color: #f7f9fb;
+}
+
+.signinformbtn {
+    margin-top: 7%;
+    display: flex;
+    width: 22vw;
+    padding: 4%;
+    text-align: center;
+    justify-content: center;
+    background-color: #708090;
+    color: #fefefe;
+    font-size: 12pt;
+}
+
+.signinformbtn:hover{
+    background-color:#506070;
+}
+
+input:focus {
+    outline: #708090;
+}
