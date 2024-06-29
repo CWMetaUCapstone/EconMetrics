@@ -14,11 +14,13 @@ export const submitProfile = async (userData) => {
             },
             body: JSON.stringify(userData)
         });
+        return response;
     } 
     catch(error) {
         console.log('Error adding profile: ', error)
     }
 }
+
 
 
 /* 

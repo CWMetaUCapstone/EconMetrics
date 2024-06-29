@@ -2,7 +2,7 @@ import './PageOne.css'
 import Select from 'react-select'
 import makeAnimated from 'react-select/animated';
 import { populateAccount } from '../../../HelperFuncs/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function PageOne( {nextPage} ) {
 
@@ -40,17 +40,10 @@ function PageOne( {nextPage} ) {
     */
    const handleAccount = async (e) => {
         e.preventDefault();
-        const form = e.target; 
         // retrieve userId from storage
         const userId = sessionStorage.getItem('userId'); 
-        const userData = {
-            roommates: form.element.roommates.value,
-            city: form.element.address.value, // this is a placeholder, once places api is up this will pull the city out of address
-            children: form.element.children.value,
-            salary: form.element.salary.value
-        };
         try {
-            await populateAccount(userData, userId)
+            await populateAccount(formData, userId)
             nextPage()
         }
         catch(error) {
@@ -60,19 +53,40 @@ function PageOne( {nextPage} ) {
         }
    }
 
+
+   // helper to update the formData state object when user applies a change
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prevData => ({
+        ...prevData,
+        [name]: value
+        }));
+    };
+
+    /* 
+    react-select returns the selected option directly 
+    rather than an event like other inputs, therefore it has a unique state handler
+    */
+    const handleSelectChange = (selectedOption) => {
+        setFormData(prevData => ({
+          ...prevData,
+          salary: selectedOption ? selectedOption.value : ''
+        }));
+      };
+
     return (
         <>
         <form onSubmit={handleAccount}>
                 <div className='form-page'> 
                     <div className='part-one'>
                         <label>Number of Roommates</label>
-                        <input type='number' name="roommates" placeholder='Roommates' required></input>
+                        <input type='number' name="roommates" placeholder='Roommates' onChange={handleInputChange} required></input>
                         <label>Address</label>
-                        <input type='text' name="address" placeholder='Address' required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
+                        <input type='text' name="address" placeholder='Address'  onChange={handleInputChange} required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
                     </div>
                     <div className='part-two'>
                         <label>Number of Children/Dependents</label>
-                        <input type='number' name="children" placeholder='Children and Dependents' required></input>
+                        <input type='number' name="children" placeholder='Children and Dependents' onChange={handleInputChange} required></input>
                         <Select
                             placeholder="Salary Range"
                             closeMenuOnSelect={true}
@@ -81,6 +95,7 @@ function PageOne( {nextPage} ) {
                             className='salary-selector'
                             isClearable={true}
                             name='salary'
+                            onChange={handleSelectChange}
                         />
                     </div>
             </div>
