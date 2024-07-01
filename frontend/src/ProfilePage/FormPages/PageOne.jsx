@@ -115,8 +115,9 @@ function PageOne({ nextPage }) {
                     <div className='part-two'>
                         <label>Number of Children/Dependents</label>
                         <input type='number' name="children" placeholder='Children and Dependents' min="0"  onChange={handleInputChange} required></input>
+                        <label>Job Title</label>
                         <Select
-                            placeholder="Type to search job titles..."
+                            placeholder="Job Title"
                             closeMenuOnSelect={true}
                             components={animatedComponents}
                             options={jobs}
@@ -126,6 +127,7 @@ function PageOne({ nextPage }) {
                             name='job'
                             className='selector'
                         />
+                        <label>Salary Range</label>
                         <Select
                             placeholder="Salary Range"
                             closeMenuOnSelect={true}
