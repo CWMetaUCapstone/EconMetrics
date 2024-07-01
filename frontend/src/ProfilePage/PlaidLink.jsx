@@ -5,7 +5,7 @@ import { fetchLinkToken } from '../../HelperFuncs/plaidHelp';
 function PlaidLink( {userId }) {
   const [token, setToken] = useState(null);
 
-  // function to revtrieve 
+
   const fetchTokenAndOpenLink = async (userId) => {
     try {
       const linkToken = await fetchLinkToken(userId); 

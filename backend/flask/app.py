@@ -8,6 +8,11 @@ from flask_cors import CORS
 import bcrypt
 from dotenv import load_dotenv
 
+#back4app BLS job imports
+import requests
+import urllib
+
+
 # Plaid imports
 from plaid.api import plaid_api
 from plaid.model.country_code import CountryCode
@@ -37,7 +42,6 @@ def create_plaid_client():
     configuration.api_key['secret'] = os.getenv('PLAID_SECRET')
     configuration.ssl_ca_cert = certifi.where()
     api_client = ApiClient(configuration)
-    print(api_client)
     return plaid_api.PlaidApi(api_client)
 
 plaid_client = create_plaid_client()
