@@ -1,3 +1,6 @@
+// this file contains a suite of generic helper functions for use across the program
+
+
 /*
 helper function to handle client-side user sign up submission
 by making a post request to append new row in profile table for email and password onto 
@@ -14,5 +17,16 @@ export const submitProfile = async (userData) => {
         });
     } catch(error) {
         console.log('Error adding profile: ', error)
+    }
+}
+
+
+
+
+
+export function nextPage() {
+    if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
     }
 }
