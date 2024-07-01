@@ -1,7 +1,11 @@
 import './Topbar.css'
 import Search from './Search'
+import { useNavigate, Route } from 'react-router-dom';
 
 function Topbar() {
+
+    const navigate = useNavigate(); 
+
     return (
         <div className='bar'>
             <div className='logo'>
@@ -13,7 +17,7 @@ function Topbar() {
             <Search/>
 
             <button className='signinbtn'>Sign In</button>
-            <button className='signupbtn'>Sign Up</button>
+            <button className='signupbtn' onClick={() => navigate('/signup')}>Sign Up</button>
 
         </div>
     )
