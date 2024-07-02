@@ -1,9 +1,15 @@
+import PlaidLink from "../PlaidLink";
+import { useParams } from "react-router-dom";
 
 
-function PageTwo ( {nextPage, backPage}) {
+function PageTwo ( {backPage}) {
+
+    const { userId } = useParams();
+
     return (
         <>
-        <p>placeholder</p>
+        <PlaidLink userId={userId}/>
+        
         <button onClick={backPage}>Previous</button>
         </>
     )

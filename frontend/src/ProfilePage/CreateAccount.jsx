@@ -28,7 +28,7 @@ function CreateAccount() {
                 <div className='createaccountcontent'>
                     <h2>Create Account</h2>
                     <div className='pages'>
-                        {page == 1 ? <PageOne nextPage={nextPage}/> : <PageTwo nextPage={nextPage} backPage={backPage}/>}
+                        {page == 1 ? <PageOne nextPage={nextPage}/> : <PageTwo backPage={backPage}/>}
                     </div>
                 </div>
             </div>
