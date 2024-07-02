@@ -4,6 +4,7 @@ import makeAnimated from 'react-select/animated';
 import { populateAccount } from '../../../HelperFuncs/utils';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { fetchJobTitles } from '../../../HelperFuncs/utils';
 
 function PageOne({ nextPage }) {
     const animatedComponents = makeAnimated();
@@ -24,32 +25,14 @@ function PageOne({ nextPage }) {
     const [jobs, setJobs] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const getSearchedJobs = async () => {
+        const jobNames = await fetchJobTitles(searchTerm)
+        setJobs(jobNames)
+    }
 
     useEffect(() => {
         if (searchTerm) {
-            const where = encodeURIComponent(JSON.stringify({
-                "title": {
-                    "$regex": searchTerm,
-                    "$options": "i"
-                }
-            }));
-            const headers = {
-                'X-Parse-Application-Id': import.meta.env.VITE_API_BLS_ID,
-                'X-Parse-REST-API-Key': import.meta.env.VITE_API_BLS_KEY
-            };
-            fetch(`https://parseapi.back4app.com/classes/Occupations_Job?limit=10&keys=title&where=${where}`, {
-                headers: headers
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.results) {
-                        const jobOptions = data.results.map(job => ({ value: job.title, label: job.title }));
-                        setJobs(jobOptions);
-                    } else {
-                        console.log('No results found');
-                    }
-                })
-                .catch(error => console.error('Error fetching jobs:', error));
+            getSearchedJobs()
         }
     }, [searchTerm]);
 

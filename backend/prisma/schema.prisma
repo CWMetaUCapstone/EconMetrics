@@ -22,6 +22,7 @@ model User {
   roommates Int?
   children  Int?
   job      String?
+  token    String? // the user's associated plaid access_token 
   transactions Transactions[] // array of associated transactions each transaction element corresponds to a cron job update
 }
 
@@ -29,24 +30,24 @@ model Transactions {
   id                    Int   @id @default(autoincrement())  
   user                  User  @relation(fields: [userId], references: [id])
   userId                Int   // id of the corresponding user
-  rent                  Float?   
-  utilities             Float? // if reading from prisma utilits is the sum of a few categories (internet, garbage, water, heat, electric, other)
-  housing               Float? // housing is sum of rent + utilities
-  loans                 Float? // similar to housing, this value is the sum of more specific loan variants
-  student_loans         Float?
-  car_loans_and_lease   Float?
-  credit_card_payments  Float?
-  other_loans           Float? // this could be expanded to match more plaid categories like mortgage and personal loans but for simplicity those are grouped into other 
-  entertainment         Float? // sum category value like housing and loans
-  streaming_services    Float? // sum of movie/tv and music streaming
-  other_entertainment   Float? // sum of video games, tickets, and other from plaid
-  food                  Float? // category sum
-  resturants            Float?
-  groceries             Float?
-  medical_care          Float? // this is an entire category that could be made much more specific
-  transportation        Float? // category sum
-  gas                   Float?
-  parking               Float?
-  ride_share            Float?
-  public_transit        Float? 
+  rent                  Decimal? @db.Decimal(13,2)   // decimal type specifies number of digits before and after decimal point, resolving floating point money issues
+  utilities             Decimal? @db.Decimal(13,2) // if reading from prisma utilits is the sum of a few categories (internet, garbage, water, heat, electric, other)
+  housing               Decimal? @db.Decimal(13,2) // housing is sum of rent + utilities
+  loans                 Decimal? @db.Decimal(13,2)// similar to housing, this value is the sum of more specific loan variants
+  student_loans         Decimal? @db.Decimal(13,2)
+  car_loans_and_lease   Decimal? @db.Decimal(13,2)
+  credit_card_payments  Decimal? @db.Decimal(13,2)
+  other_loans           Decimal? @db.Decimal(13,2) // this could be expanded to match more plaid categories like mortgage and personal loans but for simplicity those are grouped into other 
+  entertainment         Decimal? @db.Decimal(13,2) // sum category value like housing and loans
+  streaming_services    Decimal? @db.Decimal(13,2) // sum of movie/tv and music streaming
+  other_entertainment   Decimal? @db.Decimal(13,2) // sum of video games, tickets, and other from plaid
+  food                  Decimal? @db.Decimal(13,2) // category sum
+  resturants            Decimal? @db.Decimal(13,2)
+  groceries             Decimal? @db.Decimal(13,2)
+  medical_care          Decimal? @db.Decimal(13,2) // this is an entire category that could be made much more specific
+  transportation        Decimal? @db.Decimal(13,2) // category sum
+  gas                   Decimal? @db.Decimal(13,2)
+  parking               Decimal? @db.Decimal(13,2)
+  ride_share            Decimal? @db.Decimal(13,2)
+  public_transit        Decimal? @db.Decimal(13,2) 
 }

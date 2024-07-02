@@ -17,7 +17,7 @@ export const submitProfile = async (userData) => {
         return response;
     } 
     catch(error) {
-        console.log('Error adding profile: ', error)
+        console.error('Error adding profile: ', error)
     }
 }
 
@@ -67,4 +67,33 @@ export const logIn = async (userData) => {
 }
 
 
-
+/*
+helper function to fetch list of jobs matching [searchTerm] from the 
+back4app BLS occupations list endpoint
+*/
+export const fetchJobTitles = async (searchTerm) => {
+    const where = encodeURIComponent(JSON.stringify({
+        "title": {
+            "$regex": searchTerm,
+            "$options": "i"
+        }
+    }));
+    const headers = {
+        'X-Parse-Application-Id': import.meta.env.VITE_API_BLS_ID,
+        'X-Parse-REST-API-Key': import.meta.env.VITE_API_BLS_KEY
+    };
+    return fetch(`https://parseapi.back4app.com/classes/Occupations_Job?limit=10&keys=title&where=${where}`, {
+        headers: headers
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.results) {
+                // map the fetched options into the value-label form react-select uses
+                const jobOptions = data.results.map(job => ({ value: job.title, label: job.title }));
+                return(jobOptions)
+            } else {
+                console.log('No results found');
+            }
+        })
+        .catch(error => console.error('Error fetching jobs:', error));
+}

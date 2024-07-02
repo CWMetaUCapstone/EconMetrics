@@ -1,6 +1,6 @@
-import PlaidLink from "../PlaidLink";
+import PlaidLink from "./PlaidLink";
 import { useParams } from "react-router-dom";
-
+import './PageTwo.css'
 
 function PageTwo ( {backPage}) {
 
@@ -10,7 +10,7 @@ function PageTwo ( {backPage}) {
         <>
         <PlaidLink userId={userId}/>
         
-        <button onClick={backPage}>Previous</button>
+        <button className="back-btn" onClick={backPage}>Previous</button>
         </>
     )
 }

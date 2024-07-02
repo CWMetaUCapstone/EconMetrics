@@ -1,0 +1,14 @@
+.plaid-btn {
+    background-color: #111111;
+    color: #fbfbfb;
+    border-radius: 0px;
+    font-family: "Inter Tight", sans-serif;
+    font-size: 15pt;
+    padding: 10px 40px 10px 10px;
+    margin-top: 10%;
+    display: block;
+}
+
+.plaid-btn:hover{
+    background-color: #333333;
+}
