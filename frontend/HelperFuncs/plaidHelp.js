@@ -26,7 +26,6 @@ export const fetchAccessToken = async (userId, public_token) => {
       throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    console.log("access data", data);
     return data.access_token;
   };
 

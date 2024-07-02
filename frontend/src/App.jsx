@@ -15,6 +15,7 @@ function App() {
           <Navigate replace to="/home"/>
         }/>
         <Route path="/home" element={<Home/>}/>
+        <Route path="/home/:userId"/>
         <Route path="/profile/:userId" element={<Profile />}/>
         <Route path="/signup" element={<SignUp/>}/>
         <Route path="/signin" element={<SignIn/>}/>

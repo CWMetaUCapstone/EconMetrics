@@ -26,6 +26,7 @@
     width: 100%;
     display: block;
     margin-right: 20%;
+    cursor: pointer;
 }
 
 .logo {
@@ -38,6 +39,7 @@ button {
     border-radius: 10px;
     border: none;
     font-family: "Inter Tight", sans-serif;
+    cursor: pointer;
 }
 
 .signinbtn {

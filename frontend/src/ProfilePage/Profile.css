@@ -1,0 +1,47 @@
+.TopBar {
+    display: block;
+}
+
+.ProfileInfo {
+    z-index: 100;
+    font-family: "Inter Tight", sans-serif;
+    margin-top: 95px;
+    font-weight: 400;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+.ProfileContent {
+    margin-top: 5%;
+    margin-left: 30vw;
+    background-color: #F3F5F7;
+    width: 50vw;
+    height: 40vh;
+}
+
+.ProfileContent h2 {
+    font-weight: 400;
+    margin-bottom: 8%;
+    font-size: 20pt;
+    margin-left: 5%;
+}
+
+.ProfileSide {
+    float: left;
+    font-size: 15pt;
+    margin-left: 5%;
+}
+
+.EditProfileBtn {
+    background-color: #36454f;
+    color: #f7f9fb;
+    padding: 1.5%;
+    font-size: 12pt;
+    margin-top: 18%;
+}
+
+.EditProfileBtn:hover {
+    background-color: #47565f;
+    cursor: pointer;
+}
