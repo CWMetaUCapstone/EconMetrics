@@ -7,7 +7,8 @@ function SignUp() {
 
     const navigate = useNavigate(); 
 
-    /* Function to handle the immedate submision of profile creation form
+    /* 
+    function to handle the immedate submision of profile creation form
     extracts from the inputs and updates the state to track data
     accordingly and passes this info onto the client-side endpoint helper [submitProfile]
     */
@@ -19,8 +20,10 @@ function SignUp() {
             password: form.elements.password.value
         };
         try {
-            await submitProfile(userData);
-            navigate('/createprofile');
+            const response = await submitProfile(userData);
+            const data  = await response.json();
+            const id = data.userId
+            navigate(`/createprofile/${id}`);
         } catch(error) {
             console.error('sign up fail', error)
             alert('Failed to Sign Up') // This will be replaced with more robust handling (e.g. being explicit about using an already registerd email)

@@ -6,7 +6,6 @@ helper function to handle client-side user sign up submission
 by making a post request to append new row in profile table for email and password onto 
 */
 export const submitProfile = async (userData) => {
-    console.log(userData)
     try {
         const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/profiles`, {
             method: 'POST',
@@ -15,18 +14,31 @@ export const submitProfile = async (userData) => {
             },
             body: JSON.stringify(userData)
         });
-    } catch(error) {
+        return response;
+    } 
+    catch(error) {
         console.log('Error adding profile: ', error)
     }
 }
 
 
-
-
-
-export function nextPage() {
-    if (currentStep < steps.length - 1) {
-        currentStep++;
-        showStep(currentStep);
+/* 
+helper function to make put request to update user data with profile info 
+from account creation form
+*/
+export const populateAccount = async (userData, userId) => { 
+    try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/profiles/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
     }
+    catch(error) {
+        console.log("error updating profile", error)
+    }
+
+
 }

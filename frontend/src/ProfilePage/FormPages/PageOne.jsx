@@ -1,10 +1,27 @@
 import './PageOne.css'
 import Select from 'react-select'
 import makeAnimated from 'react-select/animated';
+import { populateAccount } from '../../../HelperFuncs/utils';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 function PageOne( {nextPage} ) {
 
     const animated = makeAnimated();
+
+    /* 
+    because the form is divided into two divs, accessing the form values is more
+    nuanced requiring the use of this state object to track values
+    */
+    const [formData, setFormData] = useState({
+        city : '' , 
+        roommates : 0,
+        children : 0, 
+        salary : '',
+        job: ''
+    })
+
+    const { userId } = useParams();
 
     /* 
     salary ranges are based on 2022 single-filer us tax brackets
@@ -20,29 +37,74 @@ function PageOne( {nextPage} ) {
         {value: '≥ $539,901', label: '≥ $539,901'}
     ]
 
+
+    /* 
+    function to handle form submission, processes form data into a dict [userData] and sends
+    said list to [handleAccount] helper to interact with server-side
+    */
+   const handleAccount = async (e) => {
+        e.preventDefault();
+        try {
+            await populateAccount(formData, userId)
+            nextPage()
+        }
+        catch(error) {
+            console.error('account put fail', error)
+            alert('Failed to Add Account')
+
+        }
+   }
+
+
+   // helper to update the formData state object when user applies a change
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prevData => ({
+        ...prevData,
+        [name]: value
+        }));
+    };
+
+    /* 
+    react-select returns the selected option directly 
+    rather than an event like other inputs, therefore it has a unique state handler
+    */
+    const handleSelectChange = (selectedOption) => {
+        setFormData(prevData => ({
+          ...prevData,
+          salary: selectedOption ? selectedOption.value : ''
+        }));
+      };
+
     return (
         <>
-            <div className='form-page'> 
-                <div className='part-one'>
-                    <label>Number of Roommates</label>
-                    <input type='number' name="roommates" placeholder='Roommates' required></input>
-                    <label>Address</label>
-                    <input type='text' name="address" placeholder='Address' required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
-                </div>
-                <div className='part-two'>
-                    <label>Number of Children/Dependents</label>
-                    <input type='number' name="children" placeholder='Children and Dependents' required></input>
-                    <Select
-                        placeholder="Salary Range"
-                        closeMenuOnSelect={true}
-                        components={animated}
-                        options={salary_ranges}
-                        className='salary-selector'
-                        isClearable={true}
-                    />
-                </div>
-        </div>
-        <button className="continuebtn" onClick={nextPage}>Continue</button>
+        <form onSubmit={handleAccount}>
+                <div className='form-page'> 
+                    <div className='part-one'>
+                        <label>Number of Roommates</label>
+                        <input type='number' name="roommates" placeholder='Roommates' onChange={handleInputChange} required></input>
+                        <label>Address</label>
+                        <input type='text' name="city" placeholder='Address'  onChange={handleInputChange} required></input> {/* in the near future this will be helped by google places for dynamic suggestions for address autocomplete */}
+                    </div>
+                    <div className='part-two'>
+                        <label>Number of Children/Dependents</label>
+                        <input type='number' name="children" placeholder='Children and Dependents' onChange={handleInputChange} required></input>
+                        <label>Job Title</label>
+                        <input type="text" name="job" placeholder='Job Title' onChange={handleInputChange} required></input>
+                        <Select
+                            placeholder="Salary Range"
+                            closeMenuOnSelect={true}
+                            components={animated}
+                            options={salary_ranges}
+                            className='salary-selector'
+                            isClearable={true}
+                            name='salary'
+                            onChange={handleSelectChange}
+                        />
+                    </div>
+            </div>
+            <button type='submit' className="continuebtn">Continue</button>
+        </form>
         </>
         
     )
