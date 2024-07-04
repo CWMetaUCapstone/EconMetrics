@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from "react-plaid-link";
-import { fetchLinkToken , fetchAccessToken } from '../../../HelperFuncs/plaidHelp';
+import { fetchLinkToken, fetchAccessToken, postTransactions} from '../../../HelperFuncs/plaidHelp';
 import { useNavigate } from 'react-router-dom';
 import './PlaidLink.css'
 
@@ -22,7 +22,7 @@ function PlaidLink( {userId }) {
     }
   };
 
-
+   
   /* 
   if the plaid-handled sign in is a success, another short-term token named a 
   public token is created, this is used as another layer of authentication and can be 
@@ -31,7 +31,9 @@ function PlaidLink( {userId }) {
   */
   const onSuccess = async (public_token) => {
     try {
-      const access_token = await fetchAccessToken(userId , public_token)
+      // because there are multiple unused variables here we can't simplify with '_'
+      const accessToken = await fetchAccessToken(userId , public_token)
+      const transactions = await postTransactions(userId)
       navigate(`/profile/${userId}`);
     } catch (error) {
       console.error('Error exchanging public token:', error);

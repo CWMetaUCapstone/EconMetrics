@@ -30,9 +30,9 @@ export const fetchAccessToken = async (userId, public_token) => {
   };
 
 
-export const fetchTransactions = async(userId) => {
+export const postTransactions = async(userId) => {
     const response = await fetch(`http://localhost:3000/api/transactions/sync/${userId}`, 
-    { method: 'GET'} );
+    { method: 'POST'} );
     if(!response.ok) {
         throw new Error('Network response was not ok');
     }

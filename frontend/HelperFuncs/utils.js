@@ -111,3 +111,17 @@ export const fetchProfile = async (userId) => {
     const data = await response.json();
     return data;
 }
+
+
+/*
+helper function to get the lastest posted row from the Transactions table
+*/
+export const fetchTransaction = async (userId) => {
+    const response = await fetch(`http://localhost:3000/transactions/${userId}`,
+    { method: 'GET' })
+    if(!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    return data;
+}
