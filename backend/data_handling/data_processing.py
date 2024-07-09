@@ -26,8 +26,7 @@ def clean_transaction_data(transaction_json):
                     cleaned_data.append(clean_transaction)
                 return cleaned_data
     except Exception as e:
-        (f"Error cleaning transaction data: {e}")
-        return []
+        raise (f"Error cleaning transaction data: {e}")
          
 
 
