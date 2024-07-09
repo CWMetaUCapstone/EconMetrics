@@ -67,7 +67,7 @@ function Profile() {
         return {
           headerName: "Category",
           cellRendererParams: {
-            suppressCount: true,
+            suppressCount: false,
           },
         };
       }, []);
@@ -124,7 +124,7 @@ function Profile() {
                         autoGroupColumnDef={autoGroupColumnDef}
                         treeData={true}
                         getDataPath={getDataPath}
-                        groupDefaultExpanded={-1}
+                        groupDefaultExpanded={0}
                     />
                 </div>
             </div>
