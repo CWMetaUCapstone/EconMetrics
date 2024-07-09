@@ -28,7 +28,6 @@
 }
 
 .continuebtn {
-    margin-top: 7%;
     display: flex;
     width: 8vw;
     padding: 2%;
@@ -37,7 +36,8 @@
     background-color: #708090;
     color: #fefefe;
     font-size: 12pt;
-    margin-left: 38vw;
+    margin-left: 30vw;
+    margin-top: -10vh;
 }
 
 .continuebtn:hover{
