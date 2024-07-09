@@ -4,6 +4,8 @@ import json
 import certifi
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
 from flask_cors import CORS
 import bcrypt
 from dotenv import load_dotenv
@@ -11,9 +13,6 @@ from dotenv import load_dotenv
 # Plaid imports
 from plaid.api import plaid_api
 from plaid.model.country_code import CountryCode
-from plaid.model.depository_account_subtype import DepositoryAccountSubtype
-from plaid.model.depository_filter import DepositoryFilter
-from plaid.model.link_token_account_filters import LinkTokenAccountFilters
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.products import Products
@@ -23,6 +22,10 @@ from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchan
 from plaid.model.transactions_sync_request import TransactionsSyncRequest
 import plaid
 
+# import functions and maps for transaction data processing
+from data_handling.data_processing import clean_transaction_data
+from data_handling.data_processing import aggregate_user_data
+from data_handling.data_maps import sum_category_map
 
 # Load environment variables
 load_dotenv()
@@ -55,7 +58,54 @@ class User(db.Model):
     roommates = db.Column(db.Integer, nullable=True)
     children = db.Column(db.Integer, nullable=True)
     job = db.Column(db.String(120), nullable=True)
-    token = db.Column(db.String(120), nullable=True)
+    token = db.Column(db.String(120), nullable=True) # should be unique for prod
+    transactions = relationship("Transactions", back_populates="user")
+
+class Transactions(db.Model):
+    __tablename__ = 'Transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, ForeignKey('User.id'))
+    user = relationship("User", back_populates="transactions")
+    
+    rent = db.Column(db.Numeric(13, 2), nullable=True)
+    utilities = db.Column(db.Numeric(13, 2), nullable=True)
+    housing = db.Column(db.Numeric(13, 2), nullable=True)
+    loans = db.Column(db.Numeric(13, 2), nullable=True)
+    student_loans = db.Column(db.Numeric(13, 2), nullable=True)
+    car_loans_and_lease = db.Column(db.Numeric(13, 2), nullable=True)
+    credit_card_payments = db.Column(db.Numeric(13, 2), nullable=True)
+    other_loans = db.Column(db.Numeric(13, 2), nullable=True)
+    entertainment = db.Column(db.Numeric(13, 2), nullable=True)
+    streaming_services = db.Column(db.Numeric(13, 2), nullable=True)
+    other_entertainment = db.Column(db.Numeric(13, 2), nullable=True)
+    food = db.Column(db.Numeric(13, 2), nullable=True)
+    restaurants = db.Column(db.Numeric(13, 2), nullable=True)
+    groceries = db.Column(db.Numeric(13, 2), nullable=True)
+    medical_care = db.Column(db.Numeric(13, 2), nullable=True)
+    transportation = db.Column(db.Numeric(13, 2), nullable=True)
+    gas = db.Column(db.Numeric(13, 2), nullable=True)
+    parking = db.Column(db.Numeric(13, 2), nullable=True)
+    ride_share = db.Column(db.Numeric(13, 2), nullable=True)
+    public_transit = db.Column(db.Numeric(13, 2), nullable=True)
+    other_transportation = db.Column(db.Numeric(13, 2), nullable=True)
+    merchandise = db.Column(db.Numeric(13, 2), nullable=True)
+    retail = db.Column(db.Numeric(13, 2), nullable=True)
+    apparel = db.Column(db.Numeric(13, 2), nullable=True)
+    e_commerce = db.Column(db.Numeric(13, 2), nullable=True)
+    electronics = db.Column(db.Numeric(13, 2), nullable=True)
+    pet_supplies = db.Column(db.Numeric(13, 2), nullable=True)
+    super_stores = db.Column(db.Numeric(13, 2), nullable=True)
+    other_merchandise = db.Column(db.Numeric(13, 2), nullable=True)
+    other_expenses = db.Column(db.Numeric(13, 2), nullable=True)
+    gym_membership = db.Column(db.Numeric(13, 2), nullable=True)
+    financial_planning = db.Column(db.Numeric(13, 2), nullable=True)
+    legal_services = db.Column(db.Numeric(13, 2), nullable=True)
+    insurance = db.Column(db.Numeric(13, 2), nullable=True)
+    tax_payments = db.Column(db.Numeric(13, 2), nullable=True)
+    travel = db.Column(db.Numeric(13, 2), nullable=True)
+    investment_and_saving = db.Column(db.Numeric(13, 2), nullable=True)
+    investment = db.Column(db.Numeric(13, 2), nullable=True)
+    savings_account = db.Column(db.Numeric(13, 2), nullable=True)
 
 
 # Flask Routes
@@ -97,7 +147,6 @@ def put_req_handler(userId):
 @app.route('/profiles/<userId>', methods=['GET'])
 def get_profile_data(userId):
     user = User.query.get(userId)
-    print(user)
     return jsonify({'city' : user.city , 
                 'salary' : user.salary, 
                 'roommates' : user.roommates, 
@@ -125,8 +174,9 @@ def create_link_token(userId):
             client_name="EconMetrics",
             country_codes=[CountryCode("US")],
             language='en',
+            # tokens are associated with indiviual users and therefore each user makes a unique request to plaid for link
             user=LinkTokenCreateRequestUser(
-                client_user_id=userId  # tokens are associated with indiviual users
+                client_user_id=userId
             )
         )
         response = plaid_client.link_token_create(request)
@@ -146,7 +196,8 @@ def exchange_public_token(userId):
         access_token = exchange_response['access_token']
         item_id = exchange_response['item_id']
         user = User.query.get(userId)
-        user.token = access_token # store the user's access token in user table
+        # store the user's access token in user table, an access token provides repeated access to user's plaid-data
+        user.token = access_token
         db.session.commit()
         
         return jsonify({
@@ -157,8 +208,7 @@ def exchange_public_token(userId):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-@app.route('/api/transactions/sync/<userId>', methods=['GET'])
+@app.route('/api/transactions/sync/<userId>', methods=['POST'])
 def transactions_sync(userId):
     try:
         # get the user's access_token from the user table
@@ -167,35 +217,88 @@ def transactions_sync(userId):
             access_token=user.token
         )
         transactions = plaid_client.transactions_sync(request)
-        # Transaction object is by default non-serialable hence why we transform it to a dictionary
+        # transaction object is by default non-serialable hence why we transform it to a dictionary
         transactions_data = {
             "transactions": [transaction.to_dict() for transaction in transactions.added]
         }
-        return clean_transaction_data(transactions_data)
+        clean_data =  clean_transaction_data(transactions_data)
+        user_transaction_data = aggregate_user_data(clean_data)
+        db_status = save_transaction(userId, user_transaction_data)
+
+        return jsonify({'message': db_status, 'data': user_transaction_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-"""
-helper function to filter and simplify the JSON returned by the 
-[transactions/sync] endpoint into the relevant fields of
-amount, date, currency, primary, and detailed categories. 
-"""
-def clean_transaction_data(transaction_json):
-    cleaned_data = []
-    for transaction in transaction_json['transactions']:
-        # filter out transactions where money is deposited to account since we're concerned with expenditures
-        if(transaction["amount"] > 0):
-            clean_transaction = {
-                "amount": transaction["amount"],
-                "date": transaction["date"],
-                "currency": transaction["iso_currency_code"],
-                "detailed": transaction["personal_finance_category"]["detailed"],
-                "primary": transaction["personal_finance_category"]["primary"]
-            }
-            cleaned_data.append(clean_transaction)
-    return cleaned_data
+@app.route('/transactions/<userId>', methods=['GET'])
+def get_latest_transaction(userId):
+    user = User.query.get(userId)
+    transaction = user.transactions[-1]
+    if transaction :
+        # similar to above transactions are non-serialable so to return to client we need to be explicit in JSON formatting
+        return transaction_to_json(transaction)
+    else:
+        return jsonify({'error': 'unable to find transaction'})
 
+
+
+# Helper Functions
+"""
+helper to post the transaction data found by [aggregate_user_data] into an associated Transaction table
+in the database associated with the user
+"""
+def save_transaction(userId, transactionData):
+    try:
+        transaction = Transactions(userId=userId)
+        
+        # loop through each sum/main category in transactionData to access sub-fields and add self to table
+        for category, data in transactionData.items():
+            total_percent_attr = category
+            if hasattr(transaction, total_percent_attr):
+                setattr(transaction, total_percent_attr, data['total_percent'])
+            
+           # handle sub-categories as well
+            for detail in data['details']:
+                sub_category_attr = detail['name']  
+                if hasattr(transaction, sub_category_attr):
+                    setattr(transaction, sub_category_attr, detail['percent'])
+
+        db.session.add(transaction)
+        db.session.commit()
+        
+        return "Transaction data saved successfully."
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error saving transaction for user {userId}: {e}")
+        return f"An error occurred: {str(e)}"
+
+"""
+helper function to revert an entry in the transactions table back to JSON form
+"""
+def transaction_to_json(transaction):
+    # Initialize the result dictionary
+    result = {}
+    
+    # Iterate over each attribute in the transaction object
+    for attr in dir(transaction):
+        if not attr.startswith('_') and not callable(getattr(transaction, attr)):
+            value = getattr(transaction, attr)
+            # only considering non-null categories
+            if value is not None:
+                # Map the attribute to its parent category
+                parent_category = sum_category_map.get(attr, None)
+                if parent_category:
+                    if parent_category not in result:
+                        result[parent_category] = {'total_percent': 0, 'details': []}
+                    
+                    # Append the detail to the parent category
+                    result[parent_category]['details'].append({'name': attr, 'percent': value})
+    
+    # Set total_percent for each category
+    for _, data in result.items():
+        category_sum = sum(detail['percent'] for detail in data['details'])
+        data['total_percent'] = category_sum  # Assuming total_percent is already calculated correctly
+    return result
 
 def create_app():
     return app
