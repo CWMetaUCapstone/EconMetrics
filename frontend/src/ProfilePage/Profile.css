@@ -8,7 +8,7 @@
     margin-top: 95px;
     font-weight: 400;
     width: 100vw;
-    height: 100vh;
+    height: 30vh;
     display: flex;
 }
 
@@ -20,11 +20,16 @@
     height: 40vh;
 }
 
-.ProfileContent h2 {
+h2 {
     font-weight: 400;
     margin-bottom: 8%;
     font-size: 20pt;
     margin-left: 5%;
+}
+
+h3 {
+    font-weight: 400;
+    margin-left: 8%;
 }
 
 .ProfileSide {
@@ -45,3 +50,25 @@
     background-color: #47565f;
     cursor: pointer;
 }
+
+.TransactionInfo {
+    z-index: 100;
+    font-family: "Inter Tight", sans-serif;
+    margin-top: 95px;
+    width: 100vw;
+    height: 30vh;
+    display: flex;
+}
+
+.TransactionContent {
+    margin-left: 30vw;
+    margin-top: 10%;
+    width: 50vw;
+    background-color: #F3F5F7;
+    height: 60vh;
+}
+
+.ag-theme-alpine {
+    margin-left: 8%;
+}
+

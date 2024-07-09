@@ -125,3 +125,37 @@ export const fetchTransaction = async (userId) => {
     const data = await response.json();
     return data;
 }
+
+/*
+helper function to format the transactions map object into an array of rows
+that can be passed into the handler [getDataPath] to form the category groups
+*/
+export const getRows = (transactions) => {
+    const rows = [];
+    for (const category in transactions) {
+        if (transactions[category]) {
+            const { total_percent, details } = transactions[category];
+            const roundedTotalPercent = parseFloat(total_percent.toFixed(2));
+            rows.push({
+                category: [category],
+                your_percent: `${roundedTotalPercent}%`,
+                your_percent_value: roundedTotalPercent,
+                average: 'N/A',
+                difference: 'N/A' 
+            });
+            for(let i=0; i < details.length; i++){
+                // this guard catches the catch-all categories travel and medical from appearing twice
+                if(details[i].name != category) {
+                    rows.push({
+                        category: [category, details[i].name],
+                        your_percent: `${parseFloat(details[i].percent.toFixed(2))}%`,
+                        your_percent_value: parseFloat(details[i].percent.toFixed(2)),
+                        average: 'N/A',
+                        difference: 'N/A'
+                    })
+                }
+            }
+        }
+    }
+    return rows;
+};

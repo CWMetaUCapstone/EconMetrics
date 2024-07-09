@@ -297,7 +297,7 @@ def transaction_to_json(transaction):
     # Set total_percent for each category
     for _, data in result.items():
         category_sum = sum(detail['percent'] for detail in data['details'])
-        data['total_percent'] = category_sum  # Assuming total_percent is already calculated correctly
+        data['total_percent'] = category_sum
     return result
 
 def create_app():
