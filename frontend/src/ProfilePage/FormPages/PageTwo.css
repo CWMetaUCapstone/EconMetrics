@@ -1,0 +1,15 @@
+.back-btn {
+    margin-top: 10%;
+    width: 5vw;
+    height: 4vh;
+    text-align: center;
+    justify-content: center;
+    background-color: #708090;
+    color: #fefefe;
+    font-size: 12pt;
+
+}
+
+.back-btn:hover{
+    background-color:#506070;
+}

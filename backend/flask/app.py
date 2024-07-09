@@ -8,11 +8,6 @@ from flask_cors import CORS
 import bcrypt
 from dotenv import load_dotenv
 
-#back4app BLS job imports
-import requests
-import urllib
-
-
 # Plaid imports
 from plaid.api import plaid_api
 from plaid.model.country_code import CountryCode
@@ -24,7 +19,10 @@ from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUse
 from plaid.model.products import Products
 from plaid.api_client import ApiClient
 from plaid.configuration import Configuration
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.transactions_sync_request import TransactionsSyncRequest
 import plaid
+
 
 # Load environment variables
 load_dotenv()
@@ -57,6 +55,7 @@ class User(db.Model):
     roommates = db.Column(db.Integer, nullable=True)
     children = db.Column(db.Integer, nullable=True)
     job = db.Column(db.String(120), nullable=True)
+    token = db.Column(db.String(120), nullable=True)
 
 
 # Flask Routes
@@ -71,6 +70,7 @@ def post_req_handler():
         db.session.add(user)
         db.session.commit()
         return jsonify({'message': 'Data saved!', 'userId': user.id}), 201
+        # return the users id so they can be later identified
     except Exception as e:
         app.logger.error(f"Failed to create profile: {str(e)}")
         db.session.rollback()
@@ -115,7 +115,7 @@ def create_link_token(userId):
             country_codes=[CountryCode("US")],
             language='en',
             user=LinkTokenCreateRequestUser(
-                client_user_id=userId  #tokens are associated with indiviual users
+                client_user_id=userId  # tokens are associated with indiviual users
             )
         )
         response = plaid_client.link_token_create(request)
@@ -124,20 +124,46 @@ def create_link_token(userId):
         return jsonify(json.loads(e.body)), e.status
 
 
-@app.route('/exchange_public_token', methods=['POST'])
-def exchange_public_token():
-    data = request.get_json()
-    public_token = data.get('public_token')
-    if not public_token:
-        return jsonify({'error': 'Public token is required'}), 400
-
+@app.route('/api/exchange_public_token/<userId>', methods=['POST'])
+def exchange_public_token(userId):
+    public_token = request.json['public_token']
     try:
-        exchange_response = plaid_client.item_public_token_exchange(public_token)
+        exchange_request = ItemPublicTokenExchangeRequest(
+            public_token=public_token
+        )
+        exchange_response = plaid_client.item_public_token_exchange(exchange_request)
         access_token = exchange_response['access_token']
-        return jsonify({'access_token': access_token}), 200
-    except plaid.ApiException as e:
-        return jsonify(json.loads(e.body)), e.status 
-    
+        item_id = exchange_response['item_id']
+        user = User.query.get(userId)
+        user.token = access_token # store the user's access token in user table
+        db.session.commit()
+        
+        return jsonify({
+            'access_token': access_token,
+            'item_id': item_id,
+            'public_token_exchange': 'complete'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/transactions/sync/<user_id>', methods=['GET'])
+def transactions_sync(user_id):
+    try:
+        # get the user's access_token from the user table
+        user = User.query.get(user_id)
+        request = TransactionsSyncRequest(
+            access_token=user.token
+        )
+        transactions = plaid_client.transactions_sync(request)
+        transactions_data = {
+            "transactions": [transaction.to_dict() for transaction in transactions.added]
+        }
+        return jsonify(transactions_data)
+    except Exception as e:
+        print(f'Error fetching transactions for user {user_id}: {str(e)}')
+        return jsonify({'error': str(e)}), 500
+
 
 def create_app():
     return app
