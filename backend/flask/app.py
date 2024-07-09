@@ -9,6 +9,7 @@ from sqlalchemy.orm import relationship
 from flask_cors import CORS
 import bcrypt
 from dotenv import load_dotenv
+from sqlalchemy.sql import func
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -106,6 +107,7 @@ class Transactions(db.Model):
     investment_and_saving = db.Column(db.Numeric(13, 2), nullable=True)
     investment = db.Column(db.Numeric(13, 2), nullable=True)
     savings_account = db.Column(db.Numeric(13, 2), nullable=True)
+    time = db.Columns(db.DateTime, server_default=func.now())
 
 
 # Flask Routes
@@ -233,7 +235,7 @@ def transactions_sync(userId):
 @app.route('/transactions/<userId>', methods=['GET'])
 def get_latest_transaction(userId):
     user = User.query.get(userId)
-    transaction = user.transactions[-1]
+    transaction = user.transactions.order_by(Transactions.time.desc()).first()
     if transaction :
         # similar to above transactions are non-serialable so to return to client we need to be explicit in JSON formatting
         return transaction_to_json(transaction)
@@ -276,25 +278,24 @@ def save_transaction(userId, transactionData):
 helper function to revert an entry in the transactions table back to JSON form
 """
 def transaction_to_json(transaction):
-    # Initialize the result dictionary
     result = {}
     
-    # Iterate over each attribute in the transaction object
+    # iterate over each attribute in the transaction object
     for attr in dir(transaction):
         if not attr.startswith('_') and not callable(getattr(transaction, attr)):
             value = getattr(transaction, attr)
             # only considering non-null categories
             if value is not None:
-                # Map the attribute to its parent category
+                # map the attribute to its parent category
                 parent_category = sum_category_map.get(attr, None)
                 if parent_category:
                     if parent_category not in result:
                         result[parent_category] = {'total_percent': 0, 'details': []}
                     
-                    # Append the detail to the parent category
+                    # append the detail to the parent category
                     result[parent_category]['details'].append({'name': attr, 'percent': value})
     
-    # Set total_percent for each category
+    # set total_percent for each category
     for _, data in result.items():
         category_sum = sum(detail['percent'] for detail in data['details'])
         data['total_percent'] = category_sum

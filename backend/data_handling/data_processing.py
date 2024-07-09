@@ -10,19 +10,25 @@ amount, date, currency, primary, and detailed categories.
 """
 def clean_transaction_data(transaction_json):
     cleaned_data = []
-    for transaction in transaction_json['transactions']:
-        # filter out transactions where money is deposited to account since we're concerned with expenditures
-        if transaction["amount"] > 0 :
-            clean_transaction = {
-                # for the sake of the demo, amount spent on transactions is random to provide differeneces to analyze
-                "amount": round(random.uniform(0.01, 5000), 2),
-                "date": transaction["date"],
-                "currency": transaction["iso_currency_code"],
-                "detailed": transaction["personal_finance_category"]["detailed"],
-                "primary": transaction["personal_finance_category"]["primary"]
-            }
-            cleaned_data.append(clean_transaction)
-    return cleaned_data
+    # check to ensure each transaction has the expected fields, if not something is wrong with the data and we need to prevent a total crash
+    try :
+        for transaction in transaction_json['transactions']:
+                # filter out transactions where money is deposited to account since we're concerned with expenditures
+                if transaction["amount"] > 0 :
+                    clean_transaction = {
+                        # for the sake of the demo, amount spent on transactions is random to provide differeneces to analyze
+                        "amount": round(random.uniform(0.01, 5000), 2),
+                        "date": transaction["date"],
+                        "currency": transaction["iso_currency_code"],
+                        "detailed": transaction["personal_finance_category"]["detailed"],
+                        "primary": transaction["personal_finance_category"]["primary"]
+                    }
+                    cleaned_data.append(clean_transaction)
+                return cleaned_data
+    except Exception as e:
+        raise (f"Error cleaning transaction data: {e}")
+         
+
 
 
 """
@@ -33,11 +39,11 @@ precondition: [data] is a dictionary of transactions
 def aggregate_user_data(data):
     data_frame = pd.DataFrame(data)
     total_amount = data_frame['amount'].sum()
-    # Map detailed categories to sum categories
+    # map detailed categories to sum categories
     data_frame['category'] = data_frame['detailed'].map(detailed_category_map)
-    # Map sum categories to primary categories
+    # map sum categories to primary categories
     data_frame['category_group'] = data_frame['category'].map(sum_category_map)
-    # Aggregate data at the detailed  /  category level
+    # aggregate data at the detailed  /  category level
     category_grouped = data_frame.groupby('category')['amount'].sum()
     category_percentages = (category_grouped / total_amount * 100).reset_index()
     category_percentages.columns = ['category', 'percent']
@@ -45,7 +51,7 @@ def aggregate_user_data(data):
     group_grouped = data_frame.groupby('category_group')['amount'].sum()
     group_percentages = (group_grouped / total_amount * 100).reset_index()
     group_percentages.columns = ['category_group', 'percent']
-    # Refactor the data into a dictionary for JSON handling 
+    # refactor the data into a dictionary for JSON handling 
     return format_json_output(group_percentages, category_percentages, data_frame)
 
 
@@ -62,14 +68,14 @@ returns a dictionary object representing the structured JSON output.
 def format_json_output(group_percentages, category_percentages, data_frame):
     result = {}
     for _, group_row in group_percentages.iterrows():
-        # Filter the detailed percentages for the current category group
+        # filter the detailed percentages for the current category group
         sub_categories = category_percentages[category_percentages['category'].isin(
             data_frame[data_frame['category_group'] == group_row['category_group']]['category'].unique()
         )].to_dict(orient='records')
         
-        # Simplify sub_categories structure
+        # simplify sub_categories structure
         for sub in sub_categories:
-            # rename to category
+            # rename to category for clarity and consistency with the rest of the program
             sub['name'] = sub.pop('category') 
         
         result[group_row['category_group']] = {

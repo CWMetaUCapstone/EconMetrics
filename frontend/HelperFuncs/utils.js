@@ -17,7 +17,7 @@ export const submitProfile = async (userData) => {
         return response;
     } 
     catch(error) {
-        console.error('Error adding profile: ', error)
+        error('Error adding profile: ', error)
     }
 }
 
@@ -37,7 +37,9 @@ export const populateAccount = async (userData, userId) => {
         });
     }
     catch(error) {
-        console.log("error updating profile", error)
+        console.error("error updating profile", error)
+        // if we didn't fetch anything return empty
+        return {}
     }
 }
 
@@ -92,7 +94,7 @@ export const fetchJobTitles = async (searchTerm) => {
                 const jobOptions = data.results.map(job => ({ value: job.title, label: job.title }));
                 return(jobOptions)
             } else {
-                console.log('No results found');
+                console.error('No results found for jobOptions');
             }
         })
         .catch(error => console.error('Error fetching jobs:', error));
@@ -106,7 +108,7 @@ export const fetchProfile = async (userId) => {
     const response = await fetch(`http://localhost:3000/profiles/${userId}`, 
     { method: 'GET' })
     if(!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error('Network response was not ok at fetchProfile', Error);
     }
     const data = await response.json();
     return data;
@@ -120,7 +122,7 @@ export const fetchTransaction = async (userId) => {
     const response = await fetch(`http://localhost:3000/transactions/${userId}`,
     { method: 'GET' })
     if(!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error('Network response was not ok at fetchTransaction', Error);
     }
     const data = await response.json();
     return data;
