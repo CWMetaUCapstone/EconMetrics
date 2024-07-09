@@ -1,9 +1,13 @@
 import './Profile.css'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
-import { fetchProfile } from '../../HelperFuncs/utils';
+import { fetchProfile, getRows} from '../../HelperFuncs/utils';
+import { AgGridReact } from "ag-grid-react";
+import "ag-grid-charts-enterprise";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 
 function Profile() {
     const { userId } = useParams();
@@ -15,6 +19,15 @@ function Profile() {
         'children':'',
         'job': ''
     })
+    // rows is initially empty since contents depend on what categories a user has data for
+    const [rows, setRows] = useState([]);
+
+    // because Category is defined below for row-grouping it's not needed here
+    const [columnDefs, setColumnDefs] = useState([
+        { field: "your_percent_value", headerName: "Your Percent"},
+        { field: "average", headerName: "Average of Similar Users" },
+        { field: "difference", headerName: "Difference Between You and Similar Average" }
+    ]);
 
     // call [fetchProfile] helper to retrieve the users profile info from database
     const getProfileInfo = async() => {
@@ -37,11 +50,36 @@ function Profile() {
         }
     }
 
-
     useEffect( () => {
         getTransactions();
         getProfileInfo();
     }, [userId]);
+
+    useEffect( () => {
+        // guard to ensure we only create the table once transactions has been populated
+        if(transactions) {
+            setRows(getRows(transactions))
+        }
+    }, [transactions]);
+    
+    // this helper sets "Category" to be the column rows are grouped under 
+    const autoGroupColumnDef = useMemo(() => {
+        return {
+          headerName: "Category",
+          cellRendererParams: {
+            suppressCount: true,
+          },
+        };
+      }, []);
+    
+    /*
+    this function sets the path that row data is grouped by to be the category field of row elements
+    [data] is by default analagous to the rowData passed into the AG-Grid table
+    */
+    const getDataPath = useCallback((data) => {
+    return data.category;
+    }, []);
+    
 
     return (
         <>
@@ -71,6 +109,24 @@ function Profile() {
                     </div>
                 </div>
                 <button className='EditProfileBtn'>Edit Profile</button>
+            </div>
+        </div>
+        <div className='TransactionInfo'>
+        <div className='TransactionContent'>
+                <h2>Transactions Info</h2>
+                <div className='TransactionsTitle'>
+                    <h3>Your Transactions Breakdown</h3>
+                </div>
+                <div className='ag-theme-alpine' style={{ height: 400, width: 800}}>
+                    <AgGridReact 
+                        rowData={rows}
+                        columnDefs={columnDefs}
+                        autoGroupColumnDef={autoGroupColumnDef}
+                        treeData={true}
+                        getDataPath={getDataPath}
+                        groupDefaultExpanded={-1}
+                    />
+                </div>
             </div>
         </div>
         </>

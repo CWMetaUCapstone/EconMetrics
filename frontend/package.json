@@ -10,6 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ag-grid-community/client-side-row-model": "^32.0.0",
+    "@ag-grid-enterprise/row-grouping": "^32.0.0",
+    "ag-grid-charts-enterprise": "^32.0.0",
+    "ag-grid-enterprise": "^32.0.0",
+    "ag-grid-react": "^32.0.0",
     "lodash.debounce": "^4.0.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
