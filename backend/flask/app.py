@@ -94,6 +94,17 @@ def put_req_handler(userId):
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/profiles/<userId>', methods=['GET'])
+def get_profile_data(userId):
+    user = User.query.get(userId)
+    print(user)
+    return jsonify({'city' : user.city , 
+                'salary' : user.salary, 
+                'roommates' : user.roommates, 
+                'children': user.children,
+                'jobs' : user.job})
+
+
 @app.route('/login', methods=['POST'])
 def login_post_handler():
     data = request.get_json()
@@ -147,22 +158,43 @@ def exchange_public_token(userId):
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/transactions/sync/<user_id>', methods=['GET'])
-def transactions_sync(user_id):
+@app.route('/api/transactions/sync/<userId>', methods=['GET'])
+def transactions_sync(userId):
     try:
         # get the user's access_token from the user table
-        user = User.query.get(user_id)
+        user = User.query.get(userId)
         request = TransactionsSyncRequest(
             access_token=user.token
         )
         transactions = plaid_client.transactions_sync(request)
+        # Transaction object is by default non-serialable hence why we transform it to a dictionary
         transactions_data = {
             "transactions": [transaction.to_dict() for transaction in transactions.added]
         }
-        return jsonify(transactions_data)
+        return clean_transaction_data(transactions_data)
     except Exception as e:
-        print(f'Error fetching transactions for user {user_id}: {str(e)}')
         return jsonify({'error': str(e)}), 500
+
+
+"""
+helper function to filter and simplify the JSON returned by the 
+[transactions/sync] endpoint into the relevant fields of
+amount, date, currency, primary, and detailed categories. 
+"""
+def clean_transaction_data(transaction_json):
+    cleaned_data = []
+    for transaction in transaction_json['transactions']:
+        # filter out transactions where money is deposited to account since we're concerned with expenditures
+        if(transaction["amount"] > 0):
+            clean_transaction = {
+                "amount": transaction["amount"],
+                "date": transaction["date"],
+                "currency": transaction["iso_currency_code"],
+                "detailed": transaction["personal_finance_category"]["detailed"],
+                "primary": transaction["personal_finance_category"]["primary"]
+            }
+            cleaned_data.append(clean_transaction)
+    return cleaned_data
 
 
 def create_app():

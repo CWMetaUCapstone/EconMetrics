@@ -97,3 +97,17 @@ export const fetchJobTitles = async (searchTerm) => {
         })
         .catch(error => console.error('Error fetching jobs:', error));
 }
+
+
+/*
+helper function to fetch profile data for user at [userId] from the database
+*/
+export const fetchProfile = async (userId) => {
+    const response = await fetch(`http://localhost:3000/profiles/${userId}`, 
+    { method: 'GET' })
+    if(!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    return data;
+}
