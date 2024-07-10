@@ -23,14 +23,13 @@ function SignUp() {
             const response = await submitProfile(userData);
             const data  = await response.json();
             const id = data.userId
-            navigate(`/createprofile/${id}`);
+            navigate(`/createprofile/${id}`, {replace: true});
         } catch(error) {
             console.error('sign up fail', error)
             alert('Failed to Sign Up') // This will be replaced with more robust handling (e.g. being explicit about using an already registerd email)
         }
 
     }
-
 
 
     return (

@@ -16,7 +16,7 @@ function ProfileTopBar () {
             <p className='TopName' onClick={() => navigate(`/home/${userId}`)}>EconMetrics</p>
             <Search/>
             <button className='ProfileBtn' onClick={() => navigate(`/profile/${userId}`)}>Your Profile</button>
-            <button className='LogOutBtn' onClick={() => navigate('/home')}>Log Out</button>
+            <button className='LogOutBtn' onClick={() => navigate('/home' , {replace: true})}>Log Out</button>
         </div>
     )
 }
