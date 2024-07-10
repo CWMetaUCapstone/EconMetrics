@@ -1,13 +1,14 @@
 import Topbar from '../Top/Topbar';
 import { submitProfile } from '../../../HelperFuncs/utils';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './SignUp.css'
 
 function SignUp() {
 
     const navigate = useNavigate(); 
     const [emailError, setEmailError] = useState('');
+    const [email, setEmail] = useState('')
 
     /* 
     function to handle the immedate submision of profile creation form
@@ -40,6 +41,13 @@ function SignUp() {
         }
     };
 
+    // this effect is to remove the error message of a duplicate email once the email input field is cleared
+    useEffect(() => {
+        if(email === ''){
+            setEmailError('')
+        }
+    }, [email])
+
 
     return (
         <>  
@@ -51,7 +59,7 @@ function SignUp() {
                     <h2>Sign Up</h2>
                     <form onSubmit={handleSignUp}>
                         <label>Email</label>
-                        <input type="text" placeholder='Email Address' name='email' required/>
+                        <input type="text" placeholder='Email Address' name='email' value={email} onChange={(e) => setEmail(e.target.value)} required/>
                         <div className='errorMessage'>{emailError}</div>
                         <label>Password</label>
                         <input type="password" placeholder='Password' name='password' required/>
