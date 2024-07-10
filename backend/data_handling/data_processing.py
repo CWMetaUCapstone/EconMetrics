@@ -24,11 +24,10 @@ def clean_transaction_data(transaction_json):
                         "primary": transaction["personal_finance_category"]["primary"]
                     }
                     cleaned_data.append(clean_transaction)
-                return cleaned_data
+        return cleaned_data
     except Exception as e:
         raise (f"Error cleaning transaction data: {e}")
          
-
 
 
 """
