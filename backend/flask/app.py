@@ -10,6 +10,7 @@ from flask_cors import CORS
 import bcrypt
 from dotenv import load_dotenv
 from sqlalchemy.sql import func
+from decimal import Decimal
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -240,7 +241,8 @@ def transactions_sync(userId):
 @app.route('/transactions/<userId>', methods=['GET'])
 def get_latest_transaction(userId):
     user = User.query.get(userId)
-    transaction = user.transactions.order_by(Transactions.time.desc()).first()
+    # of transactions associated with this users, get the most recent
+    transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
     if transaction :
         # similar to above transactions are non-serialable so to return to client we need to be explicit in JSON formatting
         return transaction_to_json(transaction)
@@ -291,6 +293,8 @@ def transaction_to_json(transaction):
             value = getattr(transaction, attr)
             # only considering non-null categories
             if value is not None:
+                if isinstance(value, Decimal):
+                    value = float(value)
                 # map the attribute to its parent category
                 parent_category = sum_category_map.get(attr, None)
                 if parent_category:
