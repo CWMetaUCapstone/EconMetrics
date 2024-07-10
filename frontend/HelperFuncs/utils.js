@@ -14,10 +14,19 @@ export const submitProfile = async (userData) => {
             },
             body: JSON.stringify(userData)
         });
+        if (!response.ok) {
+            if (response.headers.get("content-type")?.includes("application/json")) {
+                const errorData = await response.json();
+                throw new Error(errorData.error);
+            } else {
+                throw new Error('Server error');
+            }
+        }
         return response;
     } 
     catch(error) {
-        error('Error adding profile: ', error)
+        console.error('Error adding profile: ', error);
+        throw error
     }
 }
 

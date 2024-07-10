@@ -1,11 +1,13 @@
 import Topbar from '../Top/Topbar';
 import { submitProfile } from '../../../HelperFuncs/utils';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import './SignUp.css'
 
 function SignUp() {
 
     const navigate = useNavigate(); 
+    const [emailError, setEmailError] = useState('');
 
     /* 
     function to handle the immedate submision of profile creation form
@@ -21,15 +23,22 @@ function SignUp() {
         };
         try {
             const response = await submitProfile(userData);
-            const data  = await response.json();
-            const id = data.userId
-            navigate(`/createprofile/${id}`, {replace: true});
-        } catch(error) {
-            console.error('sign up fail', error)
-            alert('Failed to Sign Up') // This will be replaced with more robust handling (e.g. being explicit about using an already registerd email)
+            if (response) {
+                const data = await response.json();
+                const id = data.userId;
+                navigate(`/createprofile/${id}`, { replace: true });
+            } else {
+                throw new Error('no response from server for account creation');
+            }
+        } catch (error) {
+            console.error('Sign up failed', error);
+            if (error.message === 'Email already has an account') {
+                setEmailError(error.message);
+            } else {
+                alert('Failed to sign up');
+            }
         }
-
-    }
+    };
 
 
     return (
@@ -43,6 +52,7 @@ function SignUp() {
                     <form onSubmit={handleSignUp}>
                         <label>Email</label>
                         <input type="text" placeholder='Email Address' name='email' required/>
+                        <div className='errorMessage'>{emailError}</div>
                         <label>Password</label>
                         <input type="password" placeholder='Password' name='password' required/>
                         <button type='submit' className='signupformbtn'>Sign Up</button>
