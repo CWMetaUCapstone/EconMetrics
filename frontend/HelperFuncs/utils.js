@@ -28,7 +28,7 @@ from account creation form
 */
 export const populateAccount = async (userData, userId) => { 
     try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/profiles/${userId}`, {
+        const _ = await fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/profiles/${userId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

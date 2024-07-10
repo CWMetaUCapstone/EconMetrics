@@ -5,6 +5,7 @@ import { populateAccount } from '../../../HelperFuncs/utils';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchJobTitles } from '../../../HelperFuncs/utils';
+import { AddressAutofill } from '@mapbox/search-js-react';
 
 function PageOne({ nextPage }) {
     const animatedComponents = makeAnimated();
@@ -16,6 +17,8 @@ function PageOne({ nextPage }) {
     */
     const [formData, setFormData] = useState({
         city: '',
+        state: '',
+        postal: '',
         roommates: 0,
         children: 0,
         salary: '',
@@ -31,7 +34,7 @@ function PageOne({ nextPage }) {
     }
 
     useEffect(() => {
-        if (searchTerm) {
+        if (searchTerm != '') {
             getSearchedJobs()
         }
     }, [searchTerm]);
@@ -65,7 +68,7 @@ function PageOne({ nextPage }) {
         }
     };
 
-    // helper to update the formData state object when user applies a change
+    // generic helper to update the formData state object when user applies a change
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevData => ({
@@ -85,6 +88,17 @@ function PageOne({ nextPage }) {
         }));
     };
 
+
+    const handleAddressSelect = (selectedAddress) => {
+        const { city, state, postal } = selectedAddress;
+        setFormData(prevData => ({
+            ...prevData,
+            city: city,
+            state: state,
+            postal: postal
+        }));
+    }
+
     return (
         <>
             <form onSubmit={handleAccount}>
@@ -93,7 +107,15 @@ function PageOne({ nextPage }) {
                         <label>Number of Roommates</label>
                         <input type='number' name="roommates" placeholder='Roommates' min="0" onChange={handleInputChange} required></input>
                         <label>Address</label>
-                        <input type='text' name="city" placeholder='Address' onChange={handleInputChange} required></input>
+                        <AddressAutofill accessToken={import.meta.env.VITE_MAPBOX_KEY} onSelect={handleAddressSelect}> 
+                            <input type="text" placeholder='Address' autoComplete="street-address"required/>
+                            <label>City</label>
+                            <input type="text" name="city" autoComplete='address-level2' onChange={handleInputChange} readOnly />
+                            <label>State</label>
+                            <input type="text" name="state" autoComplete='address-level1' onChange={handleInputChange} readOnly />
+                            <label>Postal Code</label>
+                            <input type="text" name="postal" autoComplete='postal-code' onChange={handleInputChange} readOnly />
+                        </AddressAutofill>
                     </div>
                     <div className='part-two'>
                         <label>Number of Children/Dependents</label>

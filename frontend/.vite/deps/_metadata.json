@@ -1,0 +1,73 @@
+{
+  "hash": "ce66c9fd",
+  "configHash": "572fa9a6",
+  "lockfileHash": "cde8ba2c",
+  "browserHash": "61faf2b2",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "c6adff14",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "a7b1dfd1",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "58f0243f",
+      "needsInterop": false
+    },
+    "ag-grid-react": {
+      "src": "../../node_modules/ag-grid-react/dist/package/index.esm.mjs",
+      "file": "ag-grid-react.js",
+      "fileHash": "d6a93d85",
+      "needsInterop": false
+    },
+    "ag-grid-charts-enterprise": {
+      "src": "../../node_modules/ag-grid-charts-enterprise/dist/package/main.esm.mjs",
+      "file": "ag-grid-charts-enterprise.js",
+      "fileHash": "ea0c6364",
+      "needsInterop": false
+    },
+    "react-select": {
+      "src": "../../node_modules/react-select/dist/react-select.esm.js",
+      "file": "react-select.js",
+      "fileHash": "00698cae",
+      "needsInterop": false
+    },
+    "react-select/animated": {
+      "src": "../../node_modules/react-select/animated/dist/react-select-animated.esm.js",
+      "file": "react-select_animated.js",
+      "fileHash": "2d82ee08",
+      "needsInterop": false
+    },
+    "react-plaid-link": {
+      "src": "../../node_modules/react-plaid-link/dist/index.esm.js",
+      "file": "react-plaid-link.js",
+      "fileHash": "8a249b47",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-2HAENQGR": {
+      "file": "chunk-2HAENQGR.js"
+    },
+    "chunk-MJD72SO6": {
+      "file": "chunk-MJD72SO6.js"
+    },
+    "chunk-TNTPHDQH": {
+      "file": "chunk-TNTPHDQH.js"
+    },
+    "chunk-32E4H3EV": {
+      "file": "chunk-32E4H3EV.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}

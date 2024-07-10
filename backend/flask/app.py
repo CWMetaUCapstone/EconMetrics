@@ -55,6 +55,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     city = db.Column(db.String(120), nullable=True)
+    postal = db.Column(db.String(120), nullable=True)
+    state = db.Column(db.String(120), nullable=True)
     salary = db.Column(db.String(120), nullable=True)
     roommates = db.Column(db.Integer, nullable=True)
     children = db.Column(db.Integer, nullable=True)
@@ -107,7 +109,7 @@ class Transactions(db.Model):
     investment_and_saving = db.Column(db.Numeric(13, 2), nullable=True)
     investment = db.Column(db.Numeric(13, 2), nullable=True)
     savings_account = db.Column(db.Numeric(13, 2), nullable=True)
-    time = db.Columns(db.DateTime, server_default=func.now())
+    time = db.Column(db.DateTime, server_default=func.now())
 
 
 # Flask Routes
@@ -135,6 +137,8 @@ def put_req_handler(userId):
     try:
         user = User.query.get(userId)
         user.city = data['city']
+        user.postal = data['postal']
+        user.state = data['state']
         user.salary = data['salary']
         user.roommates = data['roommates']
         user.children = data['children']
@@ -150,10 +154,11 @@ def put_req_handler(userId):
 def get_profile_data(userId):
     user = User.query.get(userId)
     return jsonify({'city' : user.city , 
-                'salary' : user.salary, 
-                'roommates' : user.roommates, 
-                'children': user.children,
-                'jobs' : user.job})
+                    'state' : user.state,
+                    'salary' : user.salary, 
+                    'roommates' : user.roommates, 
+                    'children': user.children,
+                    'jobs' : user.job})
 
 
 @app.route('/login', methods=['POST'])

@@ -17,7 +17,8 @@ function Profile() {
         'salary': '',
         'roommates':'',
         'children':'',
-        'job': ''
+        'job': '',
+        'state': ''
     })
     // rows is initially empty since contents depend on what categories a user has data for
     const [rows, setRows] = useState([]);
@@ -91,7 +92,7 @@ function Profile() {
                 <h2> Profile Info </h2>
                 <div className='ProfileSide'>
                     <div className='ProfilePart'>
-                        <p>City: {profileData.city} </p>
+                        <p>City: {profileData.city}, {profileData.state} </p>
                     </div>
                     <div className='ProfilePart'>
                         <p>Salary Range: {profileData.salary}</p>

@@ -18,6 +18,8 @@ model User {
   email    String   @unique
   password String
   city     String?
+  postal   String?
+  state    String?
   salary   String?
   roommates Int?
   children  Int?
