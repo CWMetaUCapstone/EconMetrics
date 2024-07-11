@@ -42,7 +42,7 @@ function SignUp() {
             password: form.elements.password.value
         };
         const passwordData = isValidPassword(password)
-        if(passwordData[0]){
+        if(passwordData.valid){
             try {
                 const response = await submitProfile(userData);
                 if (response) {
@@ -61,7 +61,7 @@ function SignUp() {
                 }
             }
         }
-        else(setPasswordError(passwordData[1]))
+        else(setPasswordError(passwordData.message))
     };
 
     // this effect is to remove the error message of a duplicate email once the email input field is cleared
@@ -77,8 +77,8 @@ function SignUp() {
             setPasswordError(''); 
         } else {
             const passwordData = isValidPassword(password);
-            if (!passwordData[0]) {
-                setPasswordError(passwordData[1]); 
+            if (!passwordData.valid) {
+                setPasswordError(passwordData.message); 
             } else {
                 setPasswordError('');
             }
