@@ -1,5 +1,5 @@
 import Topbar from '../Top/Topbar';
-import { submitProfile } from '../../../HelperFuncs/utils';
+import { submitProfile, isValidPassword } from '../../../HelperFuncs/utils';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './SignUp.css'
@@ -9,6 +9,8 @@ function SignUp() {
     const navigate = useNavigate(); 
     const [emailError, setEmailError] = useState('');
     const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [passwordError, setPasswordError] = useState('')
     const [passwordVisible, setPasswordVisible] = useState(false);
 
     const visibleEyePath = (
@@ -26,6 +28,7 @@ function SignUp() {
         </>
     )
 
+
     /* 
     function to handle the immedate submision of profile creation form
     extracts from the inputs and updates the state to track data
@@ -38,23 +41,27 @@ function SignUp() {
             email: form.elements.email.value,
             password: form.elements.password.value
         };
-        try {
-            const response = await submitProfile(userData);
-            if (response) {
-                const data = await response.json();
-                const id = data.userId;
-                navigate(`/createprofile/${id}`, { replace: true });
-            } else {
-                throw new Error('no response from server for account creation');
-            }
-        } catch (error) {
-            console.error('Sign up failed', error);
-            if (error.message === 'Email already has an account') {
-                setEmailError(error.message);
-            } else {
-                alert('Failed to sign up');
+        const passwordData = isValidPassword(password)
+        if(passwordData[0]){
+            try {
+                const response = await submitProfile(userData);
+                if (response) {
+                    const data = await response.json();
+                    const id = data.userId;
+                    navigate(`/createprofile/${id}`, { replace: true });
+                } else {
+                    throw new Error('no response from server for account creation');
+                }
+            } catch (error) {
+                console.error('Sign up failed', error);
+                if (error.message === 'Email already has an account') {
+                    setEmailError(error.message);
+                } else {
+                    alert('Failed to sign up');
+                }
             }
         }
+        else(setPasswordError(passwordData[1]))
     };
 
     // this effect is to remove the error message of a duplicate email once the email input field is cleared
@@ -63,6 +70,21 @@ function SignUp() {
             setEmailError('')
         }
     }, [email])
+
+    useEffect(() => {
+        // clear message if password is cleared, otherwise, check the password's validity dynamically to give realtime feedback
+        if (password === '') {
+            setPasswordError(''); 
+        } else {
+            const passwordData = isValidPassword(password);
+            if (!passwordData[0]) {
+                setPasswordError(passwordData[1]); 
+            } else {
+                setPasswordError('');
+            }
+        }
+    }, [password]); 
+
 
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
@@ -82,11 +104,12 @@ function SignUp() {
                         <div className='errorMessage'>{emailError}</div>
                         <label>Password</label>
                         <div className='passwordContainer'>
-                            <input type={passwordVisible ? "text" : "password"} placeholder='Password' name='password' className='passwordInput' required/>
-                            <svg onClick={togglePasswordVisibility} xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="eye" viewBox="0 0 16 16">
+                            <input type={passwordVisible ? "text" : "password"} placeholder='Password' name='password' className='passwordInput' onChange={(e) => setPassword(e.target.value)} required/>
+                            <svg onClick={togglePasswordVisibility} xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" className="eye" viewBox="0 0 16 16">
                                 {passwordVisible ? visibleEyePath : hiddenEyePath}
                             </svg>
                         </div>
+                        <div className='errorMessage'>{passwordError}</div>
                         <button type='submit' className='signupformbtn'>Sign Up</button>
                     </form>
                 </div>

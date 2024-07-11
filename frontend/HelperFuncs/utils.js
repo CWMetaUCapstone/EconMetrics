@@ -170,3 +170,50 @@ export const getRows = (transactions) => {
     }
     return rows;
 };
+
+
+/*
+helper function to check if a user's password meets the requirements of containing a special character, 
+upper and lower case letters, number, and length ≥ 8. If password passes all of these, return true and '' for the error message
+if false, return false and the appropriate error message. Returns are structured as a two-element list where index 0 contains
+the successs boolean and index 1 contains the string error message. 
+*/
+export function isValidPassword(password){
+    let result = [true, '']
+
+    const specialChars= /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+    const upper = /[A-Z]/;
+    const lower = /[a-z]/;
+    const nums = /[0-9]/;
+
+    if(!specialChars.test([password])){
+        result[1] = 'password must have at least 1 special character'
+        result[0] = false
+        return result
+    }
+
+    if(!upper.test(password)){
+        result[1] = 'password must contain at least 1 upper case letter'
+        result[0] = false
+        return result
+    }
+
+    if(!lower.test(password)){
+        result[1] = 'password must contain at least 1 lower case letter'
+        result[0] = false
+        return result
+    }
+
+    if(!nums.test([password])){
+        result[1] = 'password must contain at least 1 number'
+        result[0] = false
+        return result
+    }
+
+    if(password.length < 8){
+        result[1] = 'password must contain at least 8 characters'
+        result[0] = false
+        return result
+    }
+    return result
+}
