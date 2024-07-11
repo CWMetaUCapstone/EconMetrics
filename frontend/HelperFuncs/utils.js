@@ -161,3 +161,30 @@ export const getRows = (transactions) => {
     }
     return rows;
 };
+
+
+/*
+helper function to convert the dictionary form of a search object selected by a user into a 
+readable URL endpoint for navigaion. Each category adheres to the following unique form factors: 
+city: 'Menlo Park, CA' -> 'menloparkCA'
+salary: '$87,076 - $170,050' -> '87076-170050'
+job: 'Software Enigneer' -> 'SoftwareEngineer'
+requires [search] to be a dictionary with fields label and category 
+*/
+export function searchRouteFormatter(search) {
+    if(search.category === 'city'){
+        let cleanedSearch = search.label.replace(/,|\s/g, '');
+        cleanedSearch = cleanedSearch.slice(0, -2).toLowerCase() + cleanedSearch.slice(-2).toUpperCase();
+        return cleanedSearch
+    }
+
+    else if(search.category === 'salary'){
+        let cleanedSearch = search.label.replace(/,|\$|\s/g, '');
+        return cleanedSearch
+    }
+
+    else{
+        let cleanedSearch = search.label.replace(/\s/g,'')
+        return cleanedSearch
+    }
+}
