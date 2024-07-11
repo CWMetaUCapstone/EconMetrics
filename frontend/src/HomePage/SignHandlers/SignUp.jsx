@@ -54,7 +54,7 @@ function SignUp() {
                 }
             } catch (error) {
                 console.error('Sign up failed', error);
-                if (error.message === 'Email already has an account') {
+                if (error.message === 'email already has an account') {
                     setEmailError(error.message);
                 } else {
                     alert('Failed to sign up');

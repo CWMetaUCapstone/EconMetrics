@@ -131,7 +131,7 @@ def post_req_handler():
         db.session.rollback()
         # Check if the error is due to a duplicate email
         if 'duplicate key value violates unique constraint' in str(e):
-            return jsonify({'error': 'Email already has an account'}), 409
+            return jsonify({'error': 'email already has an account'}), 409
         else:
             return jsonify({'error': str(e)}), 500
     except Exception as e:
