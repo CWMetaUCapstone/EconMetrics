@@ -9,7 +9,7 @@ function Search() {
     const navigate = useNavigate();
 
     // when a user first focuses on the search bar, they should see some default queries
-    const defaultSeach =  [{label: 'Menlo Park, CA', category: 'city' },
+    const defaultSearch =  [{label: 'Menlo Park, CA', category: 'city' },
                            {label: '$87,076 - $170,050', category: 'salary'},
                            {label: 'Software Engineer', category: 'job'}]
 
