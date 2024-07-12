@@ -14,10 +14,19 @@ export const submitProfile = async (userData) => {
             },
             body: JSON.stringify(userData)
         });
+        if (!response.ok) {
+            if (response.headers.get("content-type")?.includes("application/json")) {
+                const errorData = await response.json();
+                throw new Error(errorData.error);
+            } else {
+                throw new Error('Server error');
+            }
+        }
         return response;
     } 
     catch(error) {
-        error('Error adding profile: ', error)
+        console.error('Error adding profile: ', error);
+        throw error
     }
 }
 
@@ -162,33 +171,6 @@ export const getRows = (transactions) => {
     return rows;
 };
 
-/*
-<<<<<<< usersearch
-helper function to convert the dictionary form of a search object selected by a user into a 
-readable URL endpoint for navigaion. Each category adheres to the following unique form factors: 
-city: 'Menlo Park, CA' -> 'menloparkCA'
-salary: '$87,076 - $170,050' -> '87076-170050'
-job: 'Software Enigneer' -> 'SoftwareEngineer'
-requires [search] to be a dictionary with fields label and category 
-*/
-export function searchRouteFormatter(search) {
-    if(search.category === 'city'){
-        let cleanedSearch = search.label.replace(/,|\s/g, '');
-        cleanedSearch = cleanedSearch.slice(0, -2).toLowerCase() + cleanedSearch.slice(-2).toUpperCase();
-        return cleanedSearch
-    }
-
-    else if(search.category === 'salary'){
-        let cleanedSearch = search.label.replace(/,|\$|\s/g, '');
-        return cleanedSearch
-    }
-
-    else{
-        let cleanedSearch = search.label.replace(/\s/g,'')
-        return cleanedSearch
-    }
-}
-
 
 /*
 helper function to check if a user's password meets the requirements of containing a special character, 
@@ -237,4 +219,31 @@ export function isValidPassword(password){
         return result
     }
     return result
+}
+
+
+/*
+helper function to convert the dictionary form of a search object selected by a user into a 
+readable URL endpoint for navigaion. Each category adheres to the following unique form factors: 
+city: 'Menlo Park, CA' -> 'menloparkCA'
+salary: '$87,076 - $170,050' -> '87076-170050'
+job: 'Software Enigneer' -> 'SoftwareEngineer'
+requires [search] to be a dictionary with fields label and category 
+*/
+export function searchRouteFormatter(search) {
+    if(search.category === 'city'){
+        let cleanedSearch = search.label.replace(/,|\s/g, '');
+        cleanedSearch = cleanedSearch.slice(0, -2).toLowerCase() + cleanedSearch.slice(-2).toUpperCase();
+        return cleanedSearch
+    }
+
+    else if(search.category === 'salary'){
+        let cleanedSearch = search.label.replace(/,|\$|\s/g, '');
+        return cleanedSearch
+    }
+
+    else{
+        let cleanedSearch = search.label.replace(/\s/g,'')
+        return cleanedSearch
+    }
 }
