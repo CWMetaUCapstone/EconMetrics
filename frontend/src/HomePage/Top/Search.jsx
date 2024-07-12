@@ -39,7 +39,7 @@ function Search() {
 
                 <input type="text" value={query} placeholder='Search by City, Job Title, or Salary' className='input'
                 onFocus={() => setShowResults(true)} 
-                onBlur={() => setTimeout(() => setShowResults(false), 150)}
+                onBlur={() => setTimeout(() => setShowResults(false), 125)}
                 onChange={(e) => setQuery(e.target.value)}
                 />
             </div>
