@@ -20,6 +20,7 @@ function App() {
         <Route path="/signup" element={<SignUp/>}/>
         <Route path="/signin" element={<SignIn/>}/>
         <Route path="/createprofile/:userId" element={<CreateAccount/>}/>
+        <Route path="/search/:url"/>
       </Routes>
     </BrowserRouter>
   )
