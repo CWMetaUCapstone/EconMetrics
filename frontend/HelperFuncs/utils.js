@@ -14,10 +14,19 @@ export const submitProfile = async (userData) => {
             },
             body: JSON.stringify(userData)
         });
+        if (!response.ok) {
+            if (response.headers.get("content-type")?.includes("application/json")) {
+                const errorData = await response.json();
+                throw new Error(errorData.error);
+            } else {
+                throw new Error('Server error');
+            }
+        }
         return response;
     } 
     catch(error) {
-        error('Error adding profile: ', error)
+        console.error('Error adding profile: ', error);
+        throw error
     }
 }
 
@@ -161,3 +170,53 @@ export const getRows = (transactions) => {
     }
     return rows;
 };
+
+
+/*
+helper function to check if a user's password meets the requirements of containing a special character, 
+upper and lower case letters, number, and length ≥ 8. If password passes all of these, return true and '' for the error message
+if false, return false and the appropriate error message. Returns are structured as a dictionary with fields [valid] of type
+bool to indicate password validity and [message] of type String for the error message. 
+*/
+export function isValidPassword(password){
+    let result = {
+        valid: true,
+        message: ''
+    }
+
+    const specialChars= /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+    const upper = /[A-Z]/;
+    const lower = /[a-z]/;
+    const nums = /[0-9]/;
+
+    if(!specialChars.test([password])){
+        result.message = 'password must have at least 1 special character'
+        result.valid = false
+        return result
+    }
+
+    if(!upper.test(password)){
+        result.message = 'password must contain at least 1 upper case letter'
+        result.valid= false
+        return result
+    }
+
+    if(!lower.test(password)){
+        result.message = 'password must contain at least 1 lower case letter'
+        result.valid = false
+        return result
+    }
+
+    if(!nums.test([password])){
+        result.message = 'password must contain at least 1 number'
+        result.valid = false
+        return result
+    }
+
+    if(password.length < 8){
+        result.message = 'password must contain at least 8 characters'
+        result.valid = false
+        return result
+    }
+    return result
+}

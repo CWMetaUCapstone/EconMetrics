@@ -58,3 +58,20 @@
 input:focus {
     outline: #708090;
 }
+
+.errorMessage {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 400;
+    color: #ff5252;
+    margin: 1%;
+}
+
+.passwordContainer {
+    width: 25vw;
+}
+
+.eye {
+    cursor: pointer;
+    margin-left: 1%;
+    margin-bottom: -1%;
+}

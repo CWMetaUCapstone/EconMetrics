@@ -34,7 +34,12 @@ function PlaidLink( {userId }) {
       // because there are multiple unused variables here we can't simplify with '_'
       const accessToken = await fetchAccessToken(userId , public_token)
       const transactions = await postTransactions(userId)
-      navigate(`/profile/${userId}`);
+      /* 
+      if the user clicks back and gets directed to an undefined endpoint, 
+      the id to route to profile is kept in storage so we can still route to profile page
+      */
+      sessionStorage.setItem('userId', userId);
+      navigate(`/profile/${userId}`, {replace: true});
     } catch (error) {
       console.error('Error exchanging public token:', error);
     }
