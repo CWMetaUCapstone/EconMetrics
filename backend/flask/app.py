@@ -11,6 +11,7 @@ import bcrypt
 from dotenv import load_dotenv
 from sqlalchemy.sql import func
 from decimal import Decimal
+from sqlalchemy.exc import IntegrityError
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -124,8 +125,15 @@ def post_req_handler():
         user = User(email=data['email'], password=encrypted_password)
         db.session.add(user)
         db.session.commit()
-        return jsonify({'message': 'Data saved!', 'userId': user.id}), 201
         # return the users id so they can be later identified
+        return jsonify({'message': 'Data saved!', 'userId': user.id}), 201
+    except IntegrityError as e:
+        db.session.rollback()
+        # Check if the error is due to a duplicate email
+        if 'duplicate key value violates unique constraint' in str(e):
+            return jsonify({'error': 'email already has an account'}), 409
+        else:
+            return jsonify({'error': str(e)}), 500
     except Exception as e:
         app.logger.error(f"Failed to create profile: {str(e)}")
         db.session.rollback()
