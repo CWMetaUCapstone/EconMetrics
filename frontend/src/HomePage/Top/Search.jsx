@@ -11,14 +11,14 @@ function Search() {
     // when a user first focuses on the search bar, they should see some default queries
     const defaultSearch =  [{label: 'Menlo Park, CA', category: 'city' },
                            {label: '$87,076 - $170,050', category: 'salary'},
-                           {label: 'Software Engineer', category: 'job'}]
+                           {label: 'An/Ssn-2 (V) 4 Operator', category: 'job'}]
 
     /* search results are stored in terms of the label the user sees as well as the category of search term to allow 
     us to handle parsing unique to each category. For instance if a user enters a number like 100,000 that should be pattern
     matched to the appropriate range that number is in, or if a user searches for a city, we need to include state as well
     to ensure the user gets the exact city they're searching for
     */
-    const [searchResults, setSearchResults] = useState(defaultSeach);
+    const [searchResults, setSearchResults] = useState(defaultSearch);
     const [showResults , setShowResults] = useState(false);
 
     // helper to route the user to the search page that matches their request

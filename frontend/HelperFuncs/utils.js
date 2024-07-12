@@ -241,9 +241,9 @@ export function searchRouteFormatter(search) {
         let cleanedSearch = search.label.replace(/,|\$|\s/g, '');
         return cleanedSearch
     }
-
+    // if not salary or city , must be job
     else{
-        let cleanedSearch = search.label.replace(/\s/g,'')
-        return cleanedSearch
+        let cleanedSearch = search.label
+        return encodeURIComponent(cleanedSearch)
     }
 }
