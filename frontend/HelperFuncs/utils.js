@@ -247,3 +247,17 @@ export function searchRouteFormatter(search) {
         return encodeURIComponent(cleanedSearch)
     }
 }
+
+
+/*
+helper function to fetch the categories that match a user search from the database
+*/
+export const getSearchResults = async(query) => {
+    const response = await fetch(`http://localhost:3000/search/${query}` ,
+        {method: 'GET'})
+    if(!response.ok){
+        throw new Error('Network response was not ok at getSearchResults', Error);
+    }
+    const data = await response.json();
+    return data;
+}
