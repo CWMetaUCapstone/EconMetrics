@@ -11,7 +11,7 @@ function Search() {
 
     // when a user first focuses on the search bar, they should see some default queries
     const defaultSearch =  [{label: 'Menlo Park, CA', category: 'city' },
-                           {label: '$87,076 - $170,050', category: 'salary'},
+                           {label: '$89,076 - $170,050', category: 'salary'},
                            {label: 'Software Engineer', category: 'job'}]
 
     /* search results are stored in terms of the label the user sees as well as the category of search term to allow 

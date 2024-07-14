@@ -249,3 +249,48 @@ export const getMatchingUsers = async(searchTerm) => {
     console.log(data)
     return data;
 }
+
+
+/*
+helper function to format the rows of the AG-Grid component on search pages
+*/
+export function getSearchRows(userData) {
+    console.log('userData', userData)
+    let rows = [];
+    for (let i =0 ; i < userData.length ; i++){
+        const user = userData[i]
+        let transactionRows = [];
+        const transactions = user.transaction
+        for(const category in transactions){
+            // this loop content is copied over from [getRows] except for average and difference columns which are profile-table exclusives
+            if (transactions[category]) {
+                const { total_percent, details } = transactions[category];
+                const roundedTotalPercent = parseFloat(total_percent.toFixed(2));
+                transactionRows.push({
+                    category: [category],
+                    your_percent: `${roundedTotalPercent}%`,
+                    your_percent_value: roundedTotalPercent,
+                });
+                for(let i=0; i < details.length; i++){
+                    if(details[i].name != category) {
+                        transactionRows.push({
+                            category: [category, details[i].name],
+                            your_percent: `${parseFloat(details[i].percent.toFixed(2))}%`,
+                            your_percent_value: parseFloat(details[i].percent.toFixed(2)),
+                        })
+                    }   
+                }
+            } 
+        }
+        rows.push({
+            city: `${user.city}, ${user.state} `,
+            job: user.job,
+            salary: user.salary,
+            dependents: user.children,
+            roommates: user.roommates,
+            children: transactionRows
+
+        })
+    }
+    return rows
+}
