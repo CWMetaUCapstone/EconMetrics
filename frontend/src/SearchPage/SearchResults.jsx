@@ -51,9 +51,7 @@ function SearchResults() {
         detailGridOptions: {
             columnDefs: detailsColumnDefs,
             defaultColDef: {
-                flex: 1,
-                resizable: true,
-                sortable: true
+                width: 450
             },
             autoGroupColumnDef: {
                 headerName: "Category",
@@ -89,12 +87,6 @@ function SearchResults() {
                         columnDefs={userColumnDefs}
                         masterDetail={true}
                         detailCellRendererParams={detailCellRendererParams}
-                        defaultColDef={{
-                            flex: 1,
-                            minWidth: 100,
-                            resizable: true,
-                            sortable: true
-                        }}
                     />
                 </div>
             </div>
