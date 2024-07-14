@@ -4,6 +4,7 @@ import Profile from './ProfilePage/Profile'
 import SignUp from './HomePage/SignHandlers/SignUp'
 import SignIn from './HomePage/SignHandlers/SignIn';
 import CreateAccount from './ProfilePage/CreateAccount'
+import SearchResults from './SearchPage/SearchResults';
 import './App.css'
 
 function App() {
@@ -20,7 +21,8 @@ function App() {
         <Route path="/signup" element={<SignUp/>}/>
         <Route path="/signin" element={<SignIn/>}/>
         <Route path="/createprofile/:userId" element={<CreateAccount/>}/>
-        <Route path="/search/:url"/>
+        <Route path="/search/:searchTerm" element={<SearchResults/>}/>
+        <Route path="/profile/:userId/search/:searchTerm" element={<SearchResults/>}/>
       </Routes>
     </BrowserRouter>
   )
