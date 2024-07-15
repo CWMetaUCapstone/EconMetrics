@@ -141,33 +141,59 @@ export const fetchTransaction = async (userId) => {
 helper function to format the transactions map object into an array of rows
 that can be passed into the handler [getDataPath] to form the category groups
 */
-export const getRows = (transactions) => {
+export const getRows = (transactions, similarUsers) => {
     const rows = [];
     for (const category in transactions) {
         if (transactions[category]) {
             const { total_percent, details } = transactions[category];
             const roundedTotalPercent = parseFloat(total_percent.toFixed(2));
+            // by default, average and difference are N/A to cover case of no simlar users
+            let average = 'N/A'
+            let difference = 'N/A'
+            // filter to ensure that similarUsers has at least one field for the category
+            const similarUsersForCategory = similarUsers.filter((user) => user[category]);
+            if (similarUsersForCategory.length > 0) {
+                const medianValues = similarUsersForCategory.map((user) => user[category].total_percent);
+                const medianValue = median(medianValues);
+                average = parseFloat(medianValue.toFixed(2));
+                difference = parseFloat((roundedTotalPercent - average).toFixed(2));
+            }
             rows.push({
                 category: [category],
                 your_percent: `${roundedTotalPercent}%`,
                 your_percent_value: roundedTotalPercent,
-                average: 'N/A',
-                difference: 'N/A' 
-            });
+                average: `${average}`,
+                difference: `${difference}` 
+            })
             for(let i=0; i < details.length; i++){
-                // this guard catches the catch-all categories travel and medical from appearing twice
-                if(details[i].name != category) {
-                    rows.push({
-                        category: [category, details[i].name],
-                        your_percent: `${parseFloat(details[i].percent.toFixed(2))}%`,
-                        your_percent_value: parseFloat(details[i].percent.toFixed(2)),
-                        average: 'N/A',
-                        difference: 'N/A'
-                    })
+                const detail = details[i];
+                let detailAverage = 'N/A';
+                let detailDifference = 'N/A';
+                /* extract each similar users detailed percent value if the relevant detailed field exists,
+                this is checked by mapping each element of the [similarUsers] list onto a check looking for the
+                relevant field name. If found, extract percent, otherwise null
+                */
+                const detailPercentages = similarUsersForCategory.map((user) => {
+                    const userDetail = user[category].details.find(detailItem => detailItem.name === detail.name);
+                    return userDetail ? userDetail.percent : null;
+                });
+                  // check to make sure we actually have data to take the median of, if not we have the default 'N/A'
+                  if (detailPercentages.length > 0) {
+                    const detailMedian = median(detailPercentages);
+                    detailAverage = parseFloat(detailMedian.toFixed(2));
+                    detailDifference = parseFloat((detail.percent - detailAverage).toFixed(2));
+                  }
+
+                  rows.push({
+                    category: [category, detail.name],
+                    your_percent: `${parseFloat(detail.percent.toFixed(2))}%`,
+                    your_percent_value: parseFloat(detail.percent.toFixed(2)),
+                    average: `${detailAverage}`,
+                    difference: `${detailDifference}`
+                  })
                 }
             }
         }
-    }
     return rows;
 };
 
@@ -290,5 +316,33 @@ export function getSearchRows(userData) {
 
         })
     }
-    return rows
+  return rows
+}
+
+
+/*
+returns a json set of "similar" users transaction data. By default, a user is 'similar' if city and salary are the same
+*/
+export const fetchSimilarUsers = async(profileData) => {
+    const profileDataJson = JSON.stringify(profileData);
+    const response = await fetch(`http://localhost:3000/similar/${profileDataJson}`, 
+    { method: 'GET'})
+    if(!response.ok) {
+      throw new Error('Network response was not ok at fetchSimilarUsers', Error);
+    }
+    const data = await response.json();
+    return data;
+  }
+
+
+// helper function to return the median of an array [arr]
+function median(arr) {
+    const sorted = Array.from(arr).sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+
+    if (sorted.length % 2 === 0) {
+        return (sorted[middle - 1] + sorted[middle]) / 2;
+    }
+
+    return sorted[middle];
 }

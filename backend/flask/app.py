@@ -171,7 +171,8 @@ def get_profile_data(userId):
                     'salary' : user.salary, 
                     'roommates' : user.roommates, 
                     'children': user.children,
-                    'jobs' : user.job})
+                    'jobs' : user.job,
+                    'id' : user.id})
 
 
 @app.route('/login', methods=['POST'])
@@ -312,6 +313,11 @@ def get_users(searchTerm):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/similar/<profileDataJson>', methods=['GET'])
+def get_similar_users(profileDataJson):
+    profile_data = json.loads(profileDataJson)
+    similar_transactions = find_similar_users(profile_data)
+    return jsonify(similar_transactions)
 
 # Helper Functions
 """
@@ -374,6 +380,26 @@ def transaction_to_json(transaction):
     return result
 
 
+"""
+helper function to query database and find rows matching the city, state, and salary fields of a user but not id, this 
+keeps the user from being compared to themselves
+"""
+def find_similar_users(profileData):
+    city = profileData['city']
+    salary = profileData['salary']
+    state = profileData['state']
+    id = profileData['id']
+    # get the current user so we can prevent them from being viewed as similar to themselves
+    logged_in_user = User.query.get(id)
+    users = User.query.filter(User.city == city, User.state == state, User.salary == salary).filter(User.id != logged_in_user.id).all()
+    results = []
+    for user in users:
+        # get each relevant users most recent transaction
+        transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
+        results.append(transaction_to_json(transaction))
+    return results
+
+  
 """
 helper function to take a search query, and check which category it matches across city, state, and salary.
 salary is handled by the [handle_salary_query] helper function while city and job are handled by querying the 
