@@ -24,7 +24,7 @@ model User {
   roommates Int?
   children  Int?
   job      String?
-  token    String? // the user's associated plaid access_token 
+  token    String?  @unique // the user's associated plaid access_token 
   transactions Transactions[] // array of associated transactions
 }
 
