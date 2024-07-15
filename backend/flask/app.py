@@ -313,11 +313,16 @@ def get_users(searchTerm):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/similar/<profileDataJson>', methods=['GET'])
-def get_similar_users(profileDataJson):
-    profile_data = json.loads(profileDataJson)
-    similar_transactions = find_similar_users(profile_data)
-    return jsonify(similar_transactions)
+
+@app.route('/similar', methods=['POST'])
+def get_similar_users():
+    try:
+        profile_data = request.get_json()
+        similar_transactions = find_similar_users(profile_data)
+        return jsonify(similar_transactions)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
 
 # Helper Functions
 """

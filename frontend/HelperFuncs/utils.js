@@ -323,16 +323,18 @@ export function getSearchRows(userData) {
 /*
 returns a json set of "similar" users transaction data. By default, a user is 'similar' if city and salary are the same
 */
-export const fetchSimilarUsers = async(profileData) => {
-    const profileDataJson = JSON.stringify(profileData);
-    const response = await fetch(`http://localhost:3000/similar/${profileDataJson}`, 
-    { method: 'GET'})
-    if(!response.ok) {
+export const fetchSimilarUsers = async (profileData) => {
+    const response = await fetch('http://localhost:3000/similar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData),
+    });
+    if (!response.ok) {
       throw new Error('Network response was not ok at fetchSimilarUsers', Error);
     }
     const data = await response.json();
     return data;
-  }
+  };
 
 
 // helper function to return the median of an array [arr]
