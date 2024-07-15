@@ -223,27 +223,72 @@ export function isValidPassword(password){
 
 
 /*
-helper function to convert the dictionary form of a search object selected by a user into a 
-readable URL endpoint for navigaion. Each category adheres to the following unique form factors: 
-city: 'Menlo Park, CA' -> 'menloparkCA'
-salary: '$87,076 - $170,050' -> '87076-170050'
-job: 'Software Enigneer' -> 'SoftwareEngineer'
-requires [search] to be a dictionary with fields label and category 
+helper function to fetch the categories that match a user search from the database
 */
-export function searchRouteFormatter(search) {
-    if(search.category === 'city'){
-        let cleanedSearch = search.label.replace(/,|\s/g, '');
-        cleanedSearch = cleanedSearch.slice(0, -2).toLowerCase() + cleanedSearch.slice(-2).toUpperCase();
-        return cleanedSearch
+export const getSearchResults = async(query) => {
+    const response = await fetch(`http://localhost:3000/search/${query}` ,
+        {method: 'GET'})
+    if(!response.ok){
+        throw new Error('Network response was not ok at getSearchResults', Error);
     }
+    const data = await response.json();
+    return data;
+}
 
-    else if(search.category === 'salary'){
-        let cleanedSearch = search.label.replace(/,|\$|\s/g, '');
-        return cleanedSearch
+
+/*
+helper function to return a list of user objects that contain an entry matching [searchTerm]
+*/
+export const getMatchingUsers = async(searchTerm) => {
+    const response = await fetch(`http://localhost:3000/users/${searchTerm}`, 
+    { method: 'GET' })
+    if(!response.ok) {
+        throw new Error('Network response was not ok at fetchProfile', Error);
     }
-    // if not salary or city , must be job
-    else{
-        let cleanedSearch = search.label
-        return encodeURIComponent(cleanedSearch)
+    const data = await response.json();
+    return data;
+}
+
+
+/*
+helper function to format the rows of the AG-Grid component on search pages
+*/
+export function getSearchRows(userData) {
+    let rows = [];
+    for (let i =0 ; i < userData.length ; i++){
+        const user = userData[i]
+        let transactionRows = [];
+        const transactions = user.transaction
+        for(const category in transactions){
+            // this loop content is copied over from [getRows] except for average and difference columns which are profile-table exclusives
+            if (transactions[category]) {
+                const { total_percent, details } = transactions[category];
+                const roundedTotalPercent = parseFloat(total_percent.toFixed(2));
+                transactionRows.push({
+                    category: [category],
+                    your_percent: `${roundedTotalPercent}%`,
+                    your_percent_value: roundedTotalPercent,
+                });
+                for(let i=0; i < details.length; i++){
+                    if(details[i].name != category) {
+                        transactionRows.push({
+                            category: [category, details[i].name],
+                            your_percent: `${parseFloat(details[i].percent.toFixed(2))}%`,
+                            your_percent_value: parseFloat(details[i].percent.toFixed(2)),
+                        })
+                    }   
+                }
+            } 
+        }
+        rows.push({
+            city: `${user.city}, ${user.state} `,
+            job: user.job,
+            salary: user.salary,
+            dependents: user.children,
+            roommates: user.roommates,
+            children: transactionRows
+
+        })
     }
+    return rows
 }
