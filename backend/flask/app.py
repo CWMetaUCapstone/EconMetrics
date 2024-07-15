@@ -346,7 +346,7 @@ def query_db(query):
     numeric_filter = re.match(r'^[\$]?[\d,]+$', query)
     if numeric_filter:
             salary_results = handle_salary_query(query, users)
-            for salary in salary_results:
+            for salary in set(salary_results):
                 results.append({'label': salary, 'category': 'salary'})
     else:
         # create search conditions across city, state, and job columns of User table case-agnostic for entries containing [query]
@@ -355,13 +355,22 @@ def query_db(query):
         
         # apply the conditions onto User tables
         city_results = users.filter(city_search).with_entities(User.city, User.state).distinct().all()
-        job_results = users.filter(job_search).distinct().all()
+        job_results = users.filter(job_search).with_entities(User.job).distinct().all()
         
+        # sets enforce uniqueness so we only get distinct results
+        unique_cities = set()
+        unique_jobs = set()
+
         for city, state in city_results:
+            unique_cities.add((city, state))
+        
+        for job in job_results:
+            unique_jobs.add(job.job)
+        for city, state in unique_cities:
             results.append({'label': f"{city}, {state}", 'category': 'city'})
         
-        for job in job_results: 
-            results.append({'label': job.job, 'category': 'job'})
+        for job in unique_jobs:
+            results.append({'label': job, 'category': 'job'})
     
     return results
 
@@ -393,7 +402,7 @@ def handle_salary_query(query, user_query):
                 if min_salary <= numeric_query <= max_salary:
                     salary_search.append(User.salary == salary_range.salary)
         if salary_search:
-            salary_results = user_query.filter(or_(*salary_search)).all()
+            salary_results = user_query.filter(or_(*salary_search)).distinct().all()
             salary_list = []
             for user in salary_results:
                 salary_list.append(user.salary)
