@@ -12,8 +12,10 @@ from dotenv import load_dotenv
 from sqlalchemy.sql import func
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
+from cryptography.fernet import Fernet
 from sqlalchemy import or_
 import re
+
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -65,7 +67,7 @@ class User(db.Model):
     roommates = db.Column(db.Integer, nullable=True)
     children = db.Column(db.Integer, nullable=True)
     job = db.Column(db.String(120), nullable=True)
-    token = db.Column(db.String(120), nullable=True) # should be unique for prod
+    token = db.Column(db.String(120), nullable=True, unique=True) 
     transactions = relationship("Transactions", back_populates="user")
 
 class Transactions(db.Model):
@@ -211,41 +213,47 @@ def exchange_public_token(userId):
             public_token=public_token
         )
         exchange_response = plaid_client.item_public_token_exchange(exchange_request)
-        access_token = exchange_response['access_token']
+        access_token = exchange_response['access_token'].encode('utf-8')
         item_id = exchange_response['item_id']
         user = User.query.get(userId)
         # store the user's access token in user table, an access token provides repeated access to user's plaid-data
-        user.token = access_token
+        # this token is encrypted for security
+        # Encrypt the token
+        key = os.getenv('ENCRYPTION_KEY')
+        cipher = Fernet(key)
+        encrypted_token = cipher.encrypt(access_token)
+        user.token = encrypted_token.decode('utf-8')
         db.session.commit()
-        
-        return jsonify({
-            'access_token': access_token,
-            'item_id': item_id,
-            'public_token_exchange': 'complete'
-        })
+        return jsonify({'message': 'Access token exchanged successfully'})
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/transactions/sync/<userId>', methods=['POST'])
 def transactions_sync(userId):
     try:
-        # get the user's access_token from the user table
         user = User.query.get(userId)
-        request = TransactionsSyncRequest(
-            access_token=user.token
-        )
+        # decrypt the access token from the database to use it
+        encrypted_token = user.token
+        key = os.getenv('ENCRYPTION_KEY')
+        cipher = Fernet(key)
+        decrypted_token = cipher.decrypt(encrypted_token.encode('utf-8')).decode('utf-8')
+
+        request = TransactionsSyncRequest(access_token=decrypted_token)
         transactions = plaid_client.transactions_sync(request)
         # transaction object is by default non-serialable hence why we transform it to a dictionary
         transactions_data = {
             "transactions": [transaction.to_dict() for transaction in transactions.added]
         }
-        clean_data =  clean_transaction_data(transactions_data)
+        clean_data = clean_transaction_data(transactions_data)
         user_transaction_data = aggregate_user_data(clean_data)
         db_status = save_transaction(userId, user_transaction_data)
 
         return jsonify({'message': db_status, 'data': user_transaction_data})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error occurred: {str(e)}")
+        return jsonify({'error': 'An error occurred, check server logs for details'}), 500
 
 
 @app.route('/transactions/<userId>', methods=['GET'])
