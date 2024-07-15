@@ -51,7 +51,7 @@ function SearchResults() {
         detailGridOptions: {
             columnDefs: detailsColumnDefs,
             defaultColDef: {
-                width: 450
+                flex: 1
             },
             autoGroupColumnDef: {
                 headerName: "Category",
@@ -70,6 +70,10 @@ function SearchResults() {
         }
     };
 
+    const defaultColDef = useMemo(() => ({
+        flex: 1,
+    }), []);
+
     // the topbar users see depends on if they're logged in our not, as tracked by whether or not userId is in url
     const TopBarComponent = userId ? ProfileTopBar : Topbar;
     const search = decodeURIComponent(searchTerm)
@@ -81,12 +85,13 @@ function SearchResults() {
                 <h2>{search}</h2>
             </div>
             <div className='userList'>
-                <div className='ag-theme-alpine' style={{ height: 600, width: 1000 }}>
+                <div className='ag-theme-alpine' style={{ height: '100%', width: 1000 }}>
                     <AgGridReact 
                         rowData={rows}
                         columnDefs={userColumnDefs}
                         masterDetail={true}
                         detailCellRendererParams={detailCellRendererParams}
+                        defaultColDef={defaultColDef}
                     />
                 </div>
             </div>

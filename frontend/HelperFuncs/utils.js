@@ -246,7 +246,6 @@ export const getMatchingUsers = async(searchTerm) => {
         throw new Error('Network response was not ok at fetchProfile', Error);
     }
     const data = await response.json();
-    console.log(data)
     return data;
 }
 
@@ -255,7 +254,6 @@ export const getMatchingUsers = async(searchTerm) => {
 helper function to format the rows of the AG-Grid component on search pages
 */
 export function getSearchRows(userData) {
-    console.log('userData', userData)
     let rows = [];
     for (let i =0 ; i < userData.length ; i++){
         const user = userData[i]
