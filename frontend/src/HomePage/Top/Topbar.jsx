@@ -6,6 +6,9 @@ function Topbar() {
 
     const navigate = useNavigate(); 
 
+    // used for routing when logo is clicked
+    const menloPark = encodeURIComponent('Menlo Park, CA');
+
     return (
         <div className='bar'>
             <div className='logo'>
@@ -13,7 +16,7 @@ function Topbar() {
                     <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1z"/>
                 </svg>
             </div>
-            <p className='topname' onClick={() => navigate('/home')}>EconMetrics</p>
+            <p className='topname' onClick={() => navigate(`/search/${menloPark}`)}>EconMetrics</p>
             <Search/>
 
             <button className='signinbtn' onClick={() => navigate('/signin')}>Sign In</button>

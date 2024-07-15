@@ -12,6 +12,10 @@ from dotenv import load_dotenv
 from sqlalchemy.sql import func
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
+from cryptography.fernet import Fernet
+from sqlalchemy import or_
+import re
+
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -63,7 +67,7 @@ class User(db.Model):
     roommates = db.Column(db.Integer, nullable=True)
     children = db.Column(db.Integer, nullable=True)
     job = db.Column(db.String(120), nullable=True)
-    token = db.Column(db.String(120), nullable=True) # should be unique for prod
+    token = db.Column(db.String(120), nullable=True, unique=True) 
     transactions = relationship("Transactions", back_populates="user")
 
 class Transactions(db.Model):
@@ -210,41 +214,47 @@ def exchange_public_token(userId):
             public_token=public_token
         )
         exchange_response = plaid_client.item_public_token_exchange(exchange_request)
-        access_token = exchange_response['access_token']
+        access_token = exchange_response['access_token'].encode('utf-8')
         item_id = exchange_response['item_id']
         user = User.query.get(userId)
         # store the user's access token in user table, an access token provides repeated access to user's plaid-data
-        user.token = access_token
+        # this token is encrypted for security
+        # Encrypt the token
+        key = os.getenv('ENCRYPTION_KEY')
+        cipher = Fernet(key)
+        encrypted_token = cipher.encrypt(access_token)
+        user.token = encrypted_token.decode('utf-8')
         db.session.commit()
-        
-        return jsonify({
-            'access_token': access_token,
-            'item_id': item_id,
-            'public_token_exchange': 'complete'
-        })
+        return jsonify({'message': 'Access token exchanged successfully'})
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/transactions/sync/<userId>', methods=['POST'])
 def transactions_sync(userId):
     try:
-        # get the user's access_token from the user table
         user = User.query.get(userId)
-        request = TransactionsSyncRequest(
-            access_token=user.token
-        )
+        # decrypt the access token from the database to use it
+        encrypted_token = user.token
+        key = os.getenv('ENCRYPTION_KEY')
+        cipher = Fernet(key)
+        decrypted_token = cipher.decrypt(encrypted_token.encode('utf-8')).decode('utf-8')
+
+        request = TransactionsSyncRequest(access_token=decrypted_token)
         transactions = plaid_client.transactions_sync(request)
         # transaction object is by default non-serialable hence why we transform it to a dictionary
         transactions_data = {
             "transactions": [transaction.to_dict() for transaction in transactions.added]
         }
-        clean_data =  clean_transaction_data(transactions_data)
+        clean_data = clean_transaction_data(transactions_data)
         user_transaction_data = aggregate_user_data(clean_data)
         db_status = save_transaction(userId, user_transaction_data)
 
         return jsonify({'message': db_status, 'data': user_transaction_data})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error occurred: {str(e)}")
+        return jsonify({'error': 'An error occurred, check server logs for details'}), 500
 
 
 @app.route('/transactions/<userId>', methods=['GET'])
@@ -257,7 +267,51 @@ def get_latest_transaction(userId):
         return transaction_to_json(transaction)
     else:
         return jsonify({'error': 'unable to find transaction'})
+    
 
+@app.route('/search/<query>', methods=['GET'])
+def get_search_results(query):
+    try:
+        query_results = query_db(query)
+        return jsonify(query_results), 200  
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/users/<searchTerm>', methods=['GET'])
+def get_users(searchTerm):
+    try: 
+        search = clean_search_term(searchTerm)
+        users = User.query.filter(
+                or_(
+                    User.job == search,
+                    User.salary == search,
+                    User.city == search
+                )
+            ).all()
+        result = []
+        for user in users:
+            # get the most recent transaction for each user
+            transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
+            # check to make sure the user has a transaction before calling the format helper
+            if transaction:
+                transaction_data = transaction_to_json(transaction)
+            else:
+                transaction_data = {}
+            user_dict = {
+                'id': user.id,
+                'city': user.city,
+                'state': user.state,
+                'salary': user.salary,
+                'roommates': user.roommates,
+                'children': user.children,
+                'job': user.job,
+                'transaction': transaction_data
+            }
+            result.append(user_dict)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/similar/<profileDataJson>', methods=['GET'])
 def get_similar_users(profileDataJson):
@@ -344,6 +398,105 @@ def find_similar_users(profileData):
         transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
         results.append(transaction_to_json(transaction))
     return results
+
+  
+"""
+helper function to take a search query, and check which category it matches across city, state, and salary.
+salary is handled by the [handle_salary_query] helper function while city and job are handled by querying the 
+[User] table to find all cities/jobs that are both in [query] and have at least 1 user representing the fields in the database.
+This is done so search results will only appear when a result has at least one user to show on the search page
+"""
+def query_db(query):
+    query = query.strip().lower()
+    users = User.query
+    results = []
+
+    # numeric_filter is a regex used to check if the query is all numbers or has a dollar sign or a comma, 
+    # if so, assume the search is for a salary and call the helper
+    numeric_filter = re.match(r'^[\$]?[\d,]+$', query)
+    if numeric_filter:
+            salary_results = handle_salary_query(query, users)
+            for salary in set(salary_results):
+                results.append({'label': salary, 'category': 'salary'})
+    else:
+        # create search conditions across city, state, and job columns of User table case-agnostic for entries containing [query]
+        city_search = or_(User.city.ilike(f"%{query}%"), User.state.ilike(f"%{query}%"))
+        job_search= User.job.ilike(f"%{query}%")
+        
+        # apply the conditions onto User tables
+        city_results = users.filter(city_search).with_entities(User.city, User.state).distinct().all()
+        job_results = users.filter(job_search).with_entities(User.job).distinct().all()
+        
+        # sets enforce uniqueness so we only get distinct results
+        unique_cities = set()
+        unique_jobs = set()
+
+        for city, state in city_results:
+            unique_cities.add((city, state))
+        
+        for job in job_results:
+            unique_jobs.add(job.job)
+        for city, state in unique_cities:
+            results.append({'label': f"{city}, {state}", 'category': 'city'})
+        
+        for job in unique_jobs:
+            results.append({'label': job, 'category': 'job'})
+    
+    return results
+
+
+
+"""
+helper function to handele numerical search queries, this function considers all salary levels that have
+at least one user in the database and checks to see if the query is within any of those ranges, this requires
+formatting database entries into numerical values for the comparsion
+"""
+def handle_salary_query(query, user_query):
+    try:
+        numeric_query = int(query.replace(',', '').replace('$', ''))
+        salary_search = []
+        for salary_range in user_query.with_entities(User.salary).distinct():
+            # check if the numerical value of query is covered under the ≤ or ≥ options for salary 
+            if salary_range.salary.startswith('≤'):
+                max_salary = int(salary_range.salary.split('$')[1].replace(',', ''))
+                if numeric_query <= max_salary:
+                    salary_search.append(User.salary == salary_range.salary)
+            elif salary_range.salary.startswith('≥'):
+                min_salary = int(salary_range.salary.split('$')[1].replace(',', ''))
+                if numeric_query >= min_salary:
+                    salary_search.append(User.salary == salary_range.salary)
+            # otherwise if salary is a range, we need to format the range entry in the database into two numerical values
+            # which is what the lambda function is for and then test if the query does fit within that range
+            elif '-' in salary_range.salary:
+                min_salary, max_salary = map(lambda x: int(x.strip().replace('$', '').replace(',', '')), salary_range.salary.split('-'))
+                if min_salary <= numeric_query <= max_salary:
+                    salary_search.append(User.salary == salary_range.salary)
+        if salary_search:
+            salary_results = user_query.filter(or_(*salary_search)).distinct().all()
+            salary_list = []
+            for user in salary_results:
+                salary_list.append(user.salary)
+            return salary_list
+    except ValueError:
+        return []
+
+
+"""
+checks if [searchTerm] is a city and if so extracts the 'city' from 'city, state'. Job and Salary are already
+clean so returns them untouched
+"""
+def clean_search_term(searchTerm):
+    # strip any commans, hypens, dollar signs, and spaces in searchTerm to check the category
+    # If isalpha, we know the type is city
+    checkSearchType = re.sub(r'[\s,\-$]+', '', searchTerm)
+    if checkSearchType.isalpha():
+        if ',' in searchTerm:
+                city = searchTerm.split(',')[0].strip()
+                return city
+        else:
+            return searchTerm
+    else:
+        return searchTerm
 
 
 def create_app():
