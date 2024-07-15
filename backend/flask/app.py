@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 from sqlalchemy.sql import func
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
+import re
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -256,7 +258,15 @@ def get_latest_transaction(userId):
         return transaction_to_json(transaction)
     else:
         return jsonify({'error': 'unable to find transaction'})
+    
 
+@app.route('/search/<query>', methods=['GET'])
+def get_search_results(query):
+    try:
+        query_results = query_db(query)
+        return jsonify(query_results), 200  
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # Helper Functions
@@ -289,6 +299,7 @@ def save_transaction(userId, transactionData):
         app.logger.error(f"Error saving transaction for user {userId}: {e}")
         return f"An error occurred: {str(e)}"
 
+
 """
 helper function to revert an entry in the transactions table back to JSON form
 """
@@ -317,6 +328,88 @@ def transaction_to_json(transaction):
         category_sum = sum(detail['percent'] for detail in data['details'])
         data['total_percent'] = category_sum
     return result
+
+
+"""
+helper function to take a search query, and check which category it matches across city, state, and salary.
+salary is handled by the [handle_salary_query] helper function while city and job are handled by querying the 
+[User] table to find all cities/jobs that are both in [query] and have at least 1 user representing the fields in the database.
+This is done so search results will only appear when a result has at least one user to show on the search page
+"""
+def query_db(query):
+    query = query.strip().lower()
+    users = User.query
+    results = []
+
+    # numeric_filter is a regex used to check if the query is all numbers or has a dollar sign or a comma, 
+    # if so, assume the search is for a salary and call the helper
+    numeric_filter = re.match(r'^[\$]?[\d,]+$', query)
+    if numeric_filter:
+            salary_results = handle_salary_query(query, users)
+            for salary in set(salary_results):
+                results.append({'label': salary, 'category': 'salary'})
+    else:
+        # create search conditions across city, state, and job columns of User table case-agnostic for entries containing [query]
+        city_search = or_(User.city.ilike(f"%{query}%"), User.state.ilike(f"%{query}%"))
+        job_search= User.job.ilike(f"%{query}%")
+        
+        # apply the conditions onto User tables
+        city_results = users.filter(city_search).with_entities(User.city, User.state).distinct().all()
+        job_results = users.filter(job_search).with_entities(User.job).distinct().all()
+        
+        # sets enforce uniqueness so we only get distinct results
+        unique_cities = set()
+        unique_jobs = set()
+
+        for city, state in city_results:
+            unique_cities.add((city, state))
+        
+        for job in job_results:
+            unique_jobs.add(job.job)
+        for city, state in unique_cities:
+            results.append({'label': f"{city}, {state}", 'category': 'city'})
+        
+        for job in unique_jobs:
+            results.append({'label': job, 'category': 'job'})
+    
+    return results
+
+
+
+"""
+helper function to handele numerical search queries, this function considers all salary levels that have
+at least one user in the database and checks to see if the query is within any of those ranges, this requires
+formatting database entries into numerical values for the comparsion
+"""
+def handle_salary_query(query, user_query):
+    try:
+        numeric_query = int(query.replace(',', '').replace('$', ''))
+        salary_search = []
+        for salary_range in user_query.with_entities(User.salary).distinct():
+            # check if the numerical value of query is covered under the ≤ or ≥ options for salary 
+            if salary_range.salary.startswith('≤'):
+                max_salary = int(salary_range.salary.split('$')[1].replace(',', ''))
+                if numeric_query <= max_salary:
+                    salary_search.append(User.salary == salary_range.salary)
+            elif salary_range.salary.startswith('≥'):
+                min_salary = int(salary_range.salary.split('$')[1].replace(',', ''))
+                if numeric_query >= min_salary:
+                    salary_search.append(User.salary == salary_range.salary)
+            # otherwise if salary is a range, we need to format the range entry in the database into two numerical values
+            # which is what the lambda function is for and then test if the query does fit within that range
+            elif '-' in salary_range.salary:
+                min_salary, max_salary = map(lambda x: int(x.strip().replace('$', '').replace(',', '')), salary_range.salary.split('-'))
+                if min_salary <= numeric_query <= max_salary:
+                    salary_search.append(User.salary == salary_range.salary)
+        if salary_search:
+            salary_results = user_query.filter(or_(*salary_search)).distinct().all()
+            salary_list = []
+            for user in salary_results:
+                salary_list.append(user.salary)
+            return salary_list
+    except ValueError:
+        return []
+
 
 def create_app():
     return app

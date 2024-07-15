@@ -6,7 +6,7 @@
     font-family: "Inter Tight", sans-serif;
     font-optical-sizing: auto;
     font-weight: 300;
-    width: 260px;
+    width: 280px;
 }
 
 .input::placeholder {
@@ -19,13 +19,13 @@
 
 .searchContainer {
     position: relative;
-    width: 20vw;
+    width: 320px;
 }
 
 .searchbar {
     background-color: #708090;
-    padding: 0.5%;
-    width: 20vw;
+    padding: 1%;
+    width: 320px;
     height: 4vh;
     padding-top: 3%;
     border-radius: 12px;
@@ -70,7 +70,7 @@
 li {
     padding: 8px;
     height: 4vh;
-    width: 19vw;
+    width: 302px;
     border-radius: 5px;
 }
 

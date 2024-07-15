@@ -1,7 +1,7 @@
 import './Search.css'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchRouteFormatter } from '../../../HelperFuncs/utils';
+import { searchRouteFormatter, getSearchResults } from '../../../HelperFuncs/utils';
 
 function Search() {
 
@@ -11,7 +11,7 @@ function Search() {
     // when a user first focuses on the search bar, they should see some default queries
     const defaultSearch =  [{label: 'Menlo Park, CA', category: 'city' },
                            {label: '$87,076 - $170,050', category: 'salary'},
-                           {label: 'An/Ssn-2 (V) 4 Operator', category: 'job'}]
+                           {label: 'Software Engineer', category: 'job'}]
 
     /* search results are stored in terms of the label the user sees as well as the category of search term to allow 
     us to handle parsing unique to each category. For instance if a user enters a number like 100,000 that should be pattern
@@ -27,6 +27,23 @@ function Search() {
         navigate(`/search/${url}`)
     }
 
+    useEffect(() => {
+        // the query should be at least 3 characters long to get relevant results
+        if(query.length > 2){
+            getSearchResults(query)
+            .then(searchResults => {
+                // only change the display if there's a result to show
+                if (searchResults.length > 0) {
+                    setSearchResults(searchResults);
+                }
+            })
+            .catch(error => {
+                console.error('Error getting search results:', error);
+            });
+    }
+
+    }, [query])
+
     return (
         <div className='searchContainer'>
             <div className='searchbar'>
@@ -39,7 +56,10 @@ function Search() {
 
                 <input type="text" value={query} placeholder='Search by City, Job Title, or Salary' className='input'
                 onFocus={() => setShowResults(true)} 
-                onBlur={() => setTimeout(() => setShowResults(false), 125)}
+                onBlur={() => setTimeout(() => {
+                    setShowResults(false);
+                    setSearchResults(defaultSearch);
+                }, 125)}
                 onChange={(e) => setQuery(e.target.value)}
                 />
             </div>
