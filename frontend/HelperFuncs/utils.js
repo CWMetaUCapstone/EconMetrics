@@ -141,7 +141,7 @@ export const fetchTransaction = async (userId) => {
 helper function to format the transactions map object into an array of rows
 that can be passed into the handler [getDataPath] to form the category groups
 */
-export const getRows = (transactions) => {
+export const getRows = (transactions, similarUsers) => {
     const rows = [];
     for (const category in transactions) {
         if (transactions[category]) {
@@ -247,3 +247,19 @@ export function searchRouteFormatter(search) {
         return encodeURIComponent(cleanedSearch)
     }
 }
+
+
+/*
+returns a json set of "similar" users transaction data. By default, a user is 'similar' if city and salary are the same
+*/
+export const fetchSimilarUsers = async(profileData) => {
+    const profileDataJson = JSON.stringify(profileData);
+    const response = await fetch(`http://localhost:3000/similar/${profileDataJson}`, 
+    { method: 'GET'})
+    if(!response.ok) {
+      throw new Error('Network response was not ok at fetchSimilarUsers', Error);
+    }
+    const data = await response.json();
+    console.log(data)
+    return data;
+  }

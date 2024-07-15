@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
-import { fetchProfile, getRows} from '../../HelperFuncs/utils';
+import { fetchProfile, getRows, fetchSimilarUsers} from '../../HelperFuncs/utils';
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-charts-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
@@ -18,8 +18,11 @@ function Profile() {
         'roommates':'',
         'children':'',
         'job': '',
-        'state': ''
+        'state': '',
+        'id': ''
     })
+    const [similarUsers, setSimilarUsers] = useState([]);
+
     // rows is initially empty since contents depend on what categories a user has data for
     const [rows, setRows] = useState([]);
 
@@ -51,17 +54,34 @@ function Profile() {
         }
     }
 
+    // call [fetchSimilarUsers] to find users transaction data for users that share the [city], [state] and [salary] in [profileData]
+    const getSimilarUsers = async () => {
+        try {
+            const similarUserTransactactions = await fetchSimilarUsers(profileData)
+            setSimilarUsers(similarUserTransactactions)
+        } catch(error) {
+            console.error('Error fetching similar users trans data:', error)
+        }
+    }
+
     useEffect( () => {
-        getTransactions();
         getProfileInfo();
+        getTransactions();
     }, [userId]);
 
     useEffect( () => {
         // guard to ensure we only create the table once transactions has been populated
         if(transactions) {
-            setRows(getRows(transactions))
+            setRows(getRows(transactions, similarUsers))
         }
     }, [transactions]);
+
+    useEffect( () => {
+        // fetch similar users once profile info for this user loads
+        if(profileData.city != ''){
+            getSimilarUsers();
+        }
+    }, [profileData]);
     
     // this helper sets "Category" to be the column rows are grouped under 
     const autoGroupColumnDef = useMemo(() => {
