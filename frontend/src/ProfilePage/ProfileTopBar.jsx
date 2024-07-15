@@ -5,6 +5,8 @@ function ProfileTopBar () {
 
     const navigate = useNavigate();
     const { userId } = useParams();
+    // used for routing when logo is clicked
+    const menloPark = encodeURIComponent('Menlo Park, CA');
 
     return (
         <div className='Bar'>
@@ -13,7 +15,7 @@ function ProfileTopBar () {
                     <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1z"/>
                 </svg>
             </div>
-            <p className='TopName' onClick={() => navigate(`/home/${userId}`)}>EconMetrics</p>
+            <p className='TopName' onClick={() => navigate(`/search/${menloPark}`)}>EconMetrics</p>
             <Search/>
             <button className='ProfileBtn' onClick={() => navigate(`/profile/${userId}`)}>Your Profile</button>
             <button className='LogOutBtn' onClick={() => navigate('/home' , {replace: true})}>Log Out</button>

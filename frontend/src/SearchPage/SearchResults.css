@@ -1,0 +1,7 @@
+.mainContent {
+    margin-top: 85%;
+    display: flex;
+    white-space: nowrap;
+    font-family: "Inter Tight", sans-serif;
+    margin-left: 120%;
+}

@@ -267,6 +267,42 @@ def get_search_results(query):
         return jsonify(query_results), 200  
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/users/<searchTerm>', methods=['GET'])
+def get_users(searchTerm):
+    try: 
+        search = clean_search_term(searchTerm)
+        users = User.query.filter(
+                or_(
+                    User.job == search,
+                    User.salary == search,
+                    User.city == search
+                )
+            ).all()
+        result = []
+        for user in users:
+            # get the most recent transaction for each user
+            transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
+            # check to make sure the user has a transaction before calling the format helper
+            if transaction:
+                transaction_data = transaction_to_json(transaction)
+            else:
+                transaction_data = {}
+            user_dict = {
+                'id': user.id,
+                'city': user.city,
+                'state': user.state,
+                'salary': user.salary,
+                'roommates': user.roommates,
+                'children': user.children,
+                'job': user.job,
+                'transaction': transaction_data
+            }
+            result.append(user_dict)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # Helper Functions
@@ -409,6 +445,24 @@ def handle_salary_query(query, user_query):
             return salary_list
     except ValueError:
         return []
+
+
+"""
+checks if [searchTerm] is a city and if so extracts the 'city' from 'city, state'. Job and Salary are already
+clean so returns them untouched
+"""
+def clean_search_term(searchTerm):
+    # strip any commans, hypens, dollar signs, and spaces in searchTerm to check the category
+    # If isalpha, we know the type is city
+    checkSearchType = re.sub(r'[\s,\-$]+', '', searchTerm)
+    if checkSearchType.isalpha():
+        if ',' in searchTerm:
+                city = searchTerm.split(',')[0].strip()
+                return city
+        else:
+            return searchTerm
+    else:
+        return searchTerm
 
 
 def create_app():

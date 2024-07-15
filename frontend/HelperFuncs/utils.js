@@ -223,33 +223,6 @@ export function isValidPassword(password){
 
 
 /*
-helper function to convert the dictionary form of a search object selected by a user into a 
-readable URL endpoint for navigaion. Each category adheres to the following unique form factors: 
-city: 'Menlo Park, CA' -> 'menloparkCA'
-salary: '$87,076 - $170,050' -> '87076-170050'
-job: 'Software Enigneer' -> 'SoftwareEngineer'
-requires [search] to be a dictionary with fields label and category 
-*/
-export function searchRouteFormatter(search) {
-    if(search.category === 'city'){
-        let cleanedSearch = search.label.replace(/,|\s/g, '');
-        cleanedSearch = cleanedSearch.slice(0, -2).toLowerCase() + cleanedSearch.slice(-2).toUpperCase();
-        return cleanedSearch
-    }
-
-    else if(search.category === 'salary'){
-        let cleanedSearch = search.label.replace(/,|\$|\s/g, '');
-        return cleanedSearch
-    }
-    // if not salary or city , must be job
-    else{
-        let cleanedSearch = search.label
-        return encodeURIComponent(cleanedSearch)
-    }
-}
-
-
-/*
 helper function to fetch the categories that match a user search from the database
 */
 export const getSearchResults = async(query) => {
@@ -257,6 +230,20 @@ export const getSearchResults = async(query) => {
         {method: 'GET'})
     if(!response.ok){
         throw new Error('Network response was not ok at getSearchResults', Error);
+    }
+    const data = await response.json();
+    return data;
+}
+
+
+/*
+helper function to return a list of user objects that contain an entry matching [searchTerm]
+*/
+export const getMatchingUsers = async(searchTerm) => {
+    const response = await fetch(`http://localhost:3000/users/${searchTerm}`, 
+    { method: 'GET' })
+    if(!response.ok) {
+        throw new Error('Network response was not ok at fetchProfile', Error);
     }
     const data = await response.json();
     return data;

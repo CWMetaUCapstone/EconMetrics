@@ -1,12 +1,13 @@
 import './Search.css'
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { searchRouteFormatter, getSearchResults } from '../../../HelperFuncs/utils';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getSearchResults } from '../../../HelperFuncs/utils';
 
 function Search() {
 
     const [query, setQuery] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
 
     // when a user first focuses on the search bar, they should see some default queries
     const defaultSearch =  [{label: 'Menlo Park, CA', category: 'city' },
@@ -23,8 +24,13 @@ function Search() {
 
     // helper to route the user to the search page that matches their request
     const searchRouterHelper = (result) => {
-        let url = searchRouteFormatter(result)
-        navigate(`/search/${url}`)
+        let searchTerm= encodeURIComponent(result.label)
+        // if the user is signed in, that should be propagated into the url when they search, if not they should stay signed out
+        if (location.pathname.includes('/profile/')) {
+            navigate(`${location.pathname}/search/${searchTerm}`);
+        } else {
+            navigate(`/search/${searchTerm}`);
+        }
     }
 
     useEffect(() => {
