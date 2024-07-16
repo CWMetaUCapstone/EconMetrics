@@ -33,6 +33,7 @@ import plaid
 from data_handling.data_processing import clean_transaction_data
 from data_handling.data_processing import aggregate_user_data
 from data_handling.data_maps import sum_category_map
+from data_handling.data_processing import create_pie_plot
 
 # Load environment variables
 load_dotenv()
@@ -249,6 +250,7 @@ def transactions_sync(userId):
         }
         clean_data = clean_transaction_data(transactions_data)
         user_transaction_data = aggregate_user_data(clean_data)
+        create_pie_plot(user_transaction_data, userId)
         db_status = save_transaction(userId, user_transaction_data)
 
         return jsonify({'message': db_status, 'data': user_transaction_data})
