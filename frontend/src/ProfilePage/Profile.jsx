@@ -33,40 +33,23 @@ function Profile() {
         { field: "difference", headerName: "Difference Between You and Similar Average" }
     ]);
 
-    // call [fetchProfile] helper to retrieve the users profile info from database
-    const getProfileInfo = async() => {
+    const fetchData = async () => {
         try {
-            const profile = await fetchProfile(userId)
-            setProfileData(profile)
-        }
-        catch(error) {
-            console.error('Error fetching profile:', error)
-        }
-    }
-
-    // call [fetchTransactions] to retrieve the user's transcation data from plaid
-    const getTransactions = async () => {
-        try {
-            const transData = await fetchTransaction(userId)
-            setTransaction(transData)
+            const profile = await fetchProfile(userId);
+            setProfileData(profile);
+            if (profile.city != '') {
+                const similarUserTransactions = await fetchSimilarUsers(profile);
+                setSimilarUsers(similarUserTransactions);
+                const transData = await fetchTransaction(userId);
+                setTransaction(transData);
+            }
         } catch (error) {
-            console.error('Error fetching transactions:', error)
+            console.error('Error fetching data:', error);
         }
-    }
+    };
 
-    // call [fetchSimilarUsers] to find users transaction data for users that share the [city], [state] and [salary] in [profileData]
-    const getSimilarUsers = async () => {
-        try {
-            const similarUserTransactactions = await fetchSimilarUsers(profileData)
-            setSimilarUsers(similarUserTransactactions)
-        } catch(error) {
-            console.error('Error fetching similar users trans data:', error)
-        }
-    }
-
-    useEffect( () => {
-        getProfileInfo();
-        getTransactions();
+    useEffect(() => {
+        fetchData();
     }, [userId]);
 
     useEffect( () => {
@@ -75,13 +58,6 @@ function Profile() {
             setRows(getRows(transactions, similarUsers))
         }
     }, [transactions]);
-
-    useEffect( () => {
-        // fetch similar users once profile info for this user loads
-        if(profileData.city != ''){
-            getSimilarUsers();
-        }
-    }, [profileData]);
     
     // this helper sets "Category" to be the column rows are grouped under 
     const autoGroupColumnDef = useMemo(() => {

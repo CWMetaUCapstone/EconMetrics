@@ -65,7 +65,7 @@ function Search() {
                 onBlur={() => setTimeout(() => {
                     setShowResults(false);
                     setSearchResults(defaultSearch);
-                }, 125)}
+                }, 150)}
                 onChange={(e) => setQuery(e.target.value)}
                 />
             </div>
