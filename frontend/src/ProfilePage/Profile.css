@@ -1,5 +1,7 @@
 .TopBar {
     display: block;
+    z-index: 10000000;
+    position: fixed;
 }
 
 .ProfileInfo {
@@ -30,6 +32,7 @@ h2 {
 h3 {
     font-weight: 400;
     margin-left: 8%;
+    margin-top: 6%;
 }
 
 .ProfileSide {
@@ -65,10 +68,20 @@ h3 {
     margin-top: 10%;
     width: 55vw;
     background-color: #F3F5F7;
-    height: 70vh;
+    height: 150vh;
 }
 
 .ag-theme-alpine {
     margin-left: 8%;
 }
 
+.piePlot {
+    margin-left: 16%;
+}
+
+h4 {
+    font-family: "Inter Tight", sans-serif;
+    margin-left: 16%;
+    font-weight: 400;
+    margin-top: 6%;
+}

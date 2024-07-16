@@ -1,6 +1,11 @@
 import pandas as pd
 from data_handling.data_maps import detailed_category_map, sum_category_map
 import random
+import matplotlib
+# Agg is used as a non-gui alternative for image generation because this file runs off of main thread which would be required for GUI
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
 
 
 """
@@ -46,7 +51,7 @@ def aggregate_user_data(data):
     category_grouped = data_frame.groupby('category')['amount'].sum()
     category_percentages = (category_grouped / total_amount * 100).reset_index()
     category_percentages.columns = ['category', 'percent']
-    # Aggregate data at the sum /category group level
+    # aggregate data at the sum /category group level
     group_grouped = data_frame.groupby('category_group')['amount'].sum()
     group_percentages = (group_grouped / total_amount * 100).reset_index()
     group_percentages.columns = ['category_group', 'percent']
@@ -82,3 +87,28 @@ def format_json_output(group_percentages, category_percentages, data_frame):
             'details': sub_categories
         }
     return result
+
+
+"""
+helper function to generate a pie chart representation of user's transaction data at a sub-category level
+plots are saved in the frontend/public folder for use by react. Each file name uses userId so each user
+has a stored unique chart
+"""
+def create_pie_plot(user_transaction_data, userId):
+    # extract the 'name' and 'percent' fields by normailizing the the user_transaction_data JSON and and create a nx2 data frame for these fields
+    rows = []
+    for category in user_transaction_data.values():
+        temp_df = pd.json_normalize(category, record_path='details')
+        rows.append(temp_df)
+    data = pd.concat(rows, ignore_index=True)
+    labels = data['name'].tolist()
+    percents = data['percent'].tolist()
+    fig, ax = plt.subplots()
+    ax.pie(percents, labels=labels, autopct='%.2f%%')
+
+    root = '../frontend/public'
+    filename = f'pie_chart_{userId}.png'
+    directory = os.path.join(root, filename)
+
+    plt.savefig(directory, transparent=True)
+    plt.close()

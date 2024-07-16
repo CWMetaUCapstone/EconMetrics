@@ -76,7 +76,9 @@ function Profile() {
     const getDataPath = useCallback((data) => {
     return data.category;
     }, []);
-    
+
+    // user-specific route to their pie chart
+    let pieSrc = `../../public/pie_chart_${userId}.png`
 
     return (
         <>
@@ -123,6 +125,15 @@ function Profile() {
                         getDataPath={getDataPath}
                         groupDefaultExpanded={0}
                     />
+                </div>
+                <div className='TransactionsTitle'>
+                    <h3>Visualized Data</h3>
+                </div>
+                <div className='piePlotTitle'>
+                    <h4>Your Expenditure Breakdown</h4>
+                </div>
+                <div className='piePlot'> 
+                    <img src={pieSrc}/>
                 </div>
             </div>
         </div>
