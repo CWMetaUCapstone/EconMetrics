@@ -94,21 +94,25 @@ helper function to generate a pie chart representation of user's transaction dat
 plots are saved in the frontend/public folder for use by react. Each file name uses userId so each user
 has a stored unique chart
 """
-def create_pie_plot(user_transaction_data, userId):
-    # extract the 'name' and 'percent' fields by normailizing the the user_transaction_data JSON and and create a nx2 data frame for these fields
-    rows = []
-    for category in user_transaction_data.values():
-        temp_df = pd.json_normalize(category, record_path='details')
-        rows.append(temp_df)
-    data = pd.concat(rows, ignore_index=True)
-    labels = data['name'].tolist()
-    percents = data['percent'].tolist()
-    fig, ax = plt.subplots()
-    ax.pie(percents, labels=labels, autopct='%.2f%%')
+def create_pie_plot(transaction_data, userId, transactionId):
+    try: 
+        # extract the 'name' and 'percent' fields by normailizing the the user_transaction_data JSON and and create a nx2 data frame for these fields
+        rows = []
+        for category in transaction_data.values():
+            temp_df = pd.json_normalize(category, record_path='details')
+            rows.append(temp_df)
+        data = pd.concat(rows, ignore_index=True)
+        labels = data['name'].tolist()
+        percents = data['percent'].tolist()
+        fig, ax = plt.subplots()
+        ax.pie(percents, labels=labels, autopct='%.2f%%')
 
-    root = '../frontend/public'
-    filename = f'pie_chart_{userId}.png'
-    directory = os.path.join(root, filename)
+        root = '../frontend/public'
+        filename = f'pie_chart_{userId}_{transactionId}.png'
+        directory = os.path.join(root, filename)
+        plt.savefig(directory, transparent=True)
+        plt.close()
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
 
-    plt.savefig(directory, transparent=True)
-    plt.close()
+    

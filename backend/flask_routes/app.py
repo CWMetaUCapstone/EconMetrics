@@ -117,6 +117,7 @@ class Transactions(db.Model):
     investment = db.Column(db.Numeric(13, 2), nullable=True)
     savings_account = db.Column(db.Numeric(13, 2), nullable=True)
     time = db.Column(db.DateTime, server_default=func.now())
+    transaction_date = db.Column(db.DateTime, nullable=True)
 
 
 # Flask Routes
@@ -250,9 +251,7 @@ def transactions_sync(userId):
         }
         clean_data = clean_transaction_data(transactions_data)
         user_transaction_data = aggregate_user_data(clean_data)
-        create_pie_plot(user_transaction_data, userId)
         db_status = save_transaction(userId, user_transaction_data)
-
         return jsonify({'message': db_status, 'data': user_transaction_data})
     except Exception as e:
         print(f"Error occurred: {str(e)}")
@@ -261,14 +260,20 @@ def transactions_sync(userId):
 
 @app.route('/transactions/<userId>', methods=['GET'])
 def get_latest_transaction(userId):
-    user = User.query.get(userId)
-    # of transactions associated with this users, get the most recent
-    transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
-    if transaction :
-        # similar to above transactions are non-serialable so to return to client we need to be explicit in JSON formatting
-        return transaction_to_json(transaction)
-    else:
-        return jsonify({'error': 'unable to find transaction'})
+    try: 
+        user = User.query.get(userId)
+        # of transactions associated with this users, get the most recent
+        transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
+        if transaction :
+            # similar to above transactions are non-serialable so to return to client we need to be explicit in JSON formatting
+            transaction_json = transaction_to_json(transaction)
+            create_pie_plot(transaction_json, userId, transaction.id)
+            return transaction_json
+        else:
+            return jsonify({'error': 'unable to find transaction'})
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        return jsonify({'error': 'An error occurred, check server logs for details'}), 500
     
 
 @app.route('/search/<query>', methods=['GET'])
@@ -324,6 +329,22 @@ def get_similar_users():
         return jsonify(similar_transactions)
     except Exception as e:
         print(f"Error: {str(e)}")
+
+
+@app.route('/transId/<userId>', methods=['GET'])
+def get_latest_trans_id(userId):
+    user = User.query.get(userId)
+    transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
+    # return type at an endpoint cannot be int so id is cast to string 
+    return str(transaction.id)
+
+
+@app.route('/historical/<selectedOption>/<userId>', methods=['GET'])
+def get_historical_data(selectedOption, userId):
+    user = User.query.get(userId)
+    transactions = Transactions.query.filter_by(userId=user.id).all()
+    historical_data = historical_trans_json(selectedOption, transactions)
+    return jsonify(historical_data)
 
 
 # Helper Functions
@@ -504,6 +525,24 @@ def clean_search_term(searchTerm):
             return searchTerm
     else:
         return searchTerm
+
+
+"""
+helper function to parse a transactions list and return an list with 
+objects corresponding to historical data points
+"""
+def historical_trans_json(selectedOption, transactions):
+    result = []
+    for transaction in transactions:
+        year = transaction.transaction_date.year
+        month = transaction.transaction_date.month
+        # format the date as "month - year"
+        date = f"{month:02d}-{year}"
+        # interpret null entries as 0%
+        percent_value = getattr(transaction, selectedOption) or 0
+        result.append({'y': float(percent_value), 'label': date})
+
+    return result
 
 
 def create_app():

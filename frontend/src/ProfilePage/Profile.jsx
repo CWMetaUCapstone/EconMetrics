@@ -3,11 +3,14 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
-import { fetchProfile, getRows, fetchSimilarUsers} from '../../HelperFuncs/utils';
+import { fetchProfile, getRows, fetchSimilarUsers, getSelectData, fetchHistoricalData, fetchLatestTransID, populatePlot} from '../../HelperFuncs/utils';
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-charts-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import CanvasJSReact from '@canvasjs/react-charts';
+import Select from 'react-select';
+import makeAnimated from 'react-select/animated';
 
 function Profile() {
     const { userId } = useParams();
@@ -33,15 +36,24 @@ function Profile() {
         { field: "difference", headerName: "Difference Between You and Similar Average" }
     ]);
 
+    const [canvasData, setCanvasData] = useState([]);
+    const [selectData , setSelectData] = useState([]);
+    const [mostRecentTransId, setMostRecentTransId] = useState(0);
+    const [pieSrc , setPieSrc] = useState('');
+    const [selectedOptions, setSelectedOptions] = useState([]);
+
     const fetchData = async () => {
         try {
             const profile = await fetchProfile(userId);
             setProfileData(profile);
             if (profile.city != '') {
+                const transId = await fetchLatestTransID(userId)
+                setMostRecentTransId(transId)
                 const similarUserTransactions = await fetchSimilarUsers(profile);
                 setSimilarUsers(similarUserTransactions);
                 const transData = await fetchTransaction(userId);
                 setTransaction(transData);
+                setSelectData(getSelectData(transData));
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -58,6 +70,12 @@ function Profile() {
             setRows(getRows(transactions, similarUsers))
         }
     }, [transactions]);
+
+    useEffect(() => {
+        if(mostRecentTransId != 0){
+            setPieSrc(`../../public/pie_chart_${userId}_${mostRecentTransId}.png`);
+        }
+    }, [mostRecentTransId]); // Include userId if it's necessary for the dependency array
     
     // this helper sets "Category" to be the column rows are grouped under 
     const autoGroupColumnDef = useMemo(() => {
@@ -74,11 +92,48 @@ function Profile() {
     [data] is by default analagous to the rowData passed into the AG-Grid table
     */
     const getDataPath = useCallback((data) => {
-    return data.category;
+        return data.category;
     }, []);
 
-    // user-specific route to their pie chart
-    let pieSrc = `../../public/pie_chart_${userId}.png`
+    const canvasOptions = {
+        animationEnabled: true,	
+        backgroundColor: "#f7f9f",
+        title:{
+            text: "Your Monthly Spending"
+        },
+        axisY : {
+            title: "Percent of Expenditure"
+        },
+        axisX : {
+            title: "Month"
+        }, 
+        toolTip: {
+            shared: true
+        },
+        data: canvasData
+    }
+
+
+    useEffect(() => {
+        const updateGraphs = async () => {
+            if (selectedOptions.length > 0) {
+                // map over all selected options and fetch each options historical data
+                const plots = await Promise.all(selectedOptions.map(async (option) => {
+                    const historicalData = await fetchHistoricalData(userId, option);
+                    return populatePlot(historicalData, option);
+                }));
+                setCanvasData(plots);
+            } else {
+                // if no options are selected clear canvas
+                setCanvasData([]);
+            }
+        };
+    
+        updateGraphs();
+    }, [selectedOptions]);
+
+    let CanvasJSChart = CanvasJSReact.CanvasJSChart;
+    const animatedComponents = makeAnimated(); 
 
     return (
         <>
@@ -134,6 +189,22 @@ function Profile() {
                 </div>
                 <div className='piePlot'> 
                     <img src={pieSrc}/>
+                </div>
+                <div className='graphSelect'>
+                    <Select
+                        placeholder="Graph…"
+                        closeMenuOnSelect={true}
+                        components={animatedComponents}
+                        options={selectData}
+                        isClearable={true}
+                        className='graphSelector'
+                        isMulti
+                        onChange={setSelectedOptions}
+                    />
+                </div>
+                <div className='canvasChart'>
+                <CanvasJSChart options = {canvasOptions}
+			    />
                 </div>
             </div>
         </div>
