@@ -151,7 +151,8 @@ const Chart = ({ data, onSaveSvg }) => {
                 movedPointer(event);
             })
             .on("touchstart", event => event.preventDefault());
-
+        
+        // once the svg is rendered, cache it in localStorage
         if (onSaveSvg && svgRef.current) {
             onSaveSvg(svgRef.current);
         }   
