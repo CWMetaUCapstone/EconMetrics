@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-const Chart = ({ data }) => {
+const Chart = ({ data, onSaveSvg }) => {
     const svgRef = useRef();
 
     useEffect(() => {
@@ -151,8 +151,12 @@ const Chart = ({ data }) => {
                 movedPointer(event);
             })
             .on("touchstart", event => event.preventDefault());
+
+        if (onSaveSvg && svgRef.current) {
+            onSaveSvg(svgRef.current);
+        }   
             
-        }, [data]);
+        }, [data, onSaveSvg]);
 
 
         return (
