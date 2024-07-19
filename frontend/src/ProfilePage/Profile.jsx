@@ -1,16 +1,17 @@
 import './Profile.css'
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
-import { fetchProfile, getRows, fetchSimilarUsers, getSelectData, fetchHistoricalData, fetchLatestTransID, populatePlot} from '../../HelperFuncs/utils';
+import { fetchProfile, getRows, fetchSimilarUsers, getSelectData, fetchHistoricalData, fetchLatestTransID} from '../../HelperFuncs/utils';
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-charts-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import CanvasJSReact from '@canvasjs/react-charts';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
+import Chart from './Chart';
+
 
 function Profile() {
     const { userId } = useParams();
@@ -36,7 +37,7 @@ function Profile() {
         { field: "difference", headerName: "Difference Between You and Similar Average" }
     ]);
 
-    const [canvasData, setCanvasData] = useState([]);
+    const [chartData, setChartData] = useState([]);
     const [selectData , setSelectData] = useState([]);
     const [mostRecentTransId, setMostRecentTransId] = useState(0);
     const [pieSrc , setPieSrc] = useState('');
@@ -95,44 +96,26 @@ function Profile() {
         return data.category;
     }, []);
 
-    const canvasOptions = {
-        animationEnabled: true,	
-        backgroundColor: "#f7f9f",
-        title:{
-            text: "Your Monthly Spending"
-        },
-        axisY : {
-            title: "Percent of Expenditure"
-        },
-        axisX : {
-            title: "Month"
-        }, 
-        toolTip: {
-            shared: true
-        },
-        data: canvasData
-    }
-
 
     useEffect(() => {
-        const updateGraphs = async () => {
-            if (selectedOptions.length > 0) {
-                // map over all selected options and fetch each options historical data
-                const plots = await Promise.all(selectedOptions.map(async (option) => {
-                    const historicalData = await fetchHistoricalData(userId, option);
-                    return populatePlot(historicalData, option);
-                }));
-                setCanvasData(plots);
-            } else {
-                // if no options are selected clear canvas
-                setCanvasData([]);
-            }
-        };
-    
-        updateGraphs();
+        if (selectedOptions.length > 0) {
+            getHistory(selectedOptions);
+        } else {
+            // clear chartData if there are no selected options
+            setChartData([]);
+        }
     }, [selectedOptions]);
+    
+    const getHistory = async (options) => {
+    // Fetch historical data for all selected options
+    const dataPromises = options.map(option =>
+        fetchHistoricalData(userId, option.value) // Pass the value of each option to the fetch function
+    );
+    const results = await Promise.all(dataPromises);
+    const combinedData = results.flat();
+    setChartData(combinedData); // Update the chart data with combined results from all selected options
+};
 
-    let CanvasJSChart = CanvasJSReact.CanvasJSChart;
     const animatedComponents = makeAnimated(); 
 
     return (
@@ -202,9 +185,8 @@ function Profile() {
                         onChange={setSelectedOptions}
                     />
                 </div>
-                <div className='canvasChart'>
-                <CanvasJSChart options = {canvasOptions}
-			    />
+                <div className='chart'>
+                    <Chart data={chartData}/>
                 </div>
             </div>
         </div>
