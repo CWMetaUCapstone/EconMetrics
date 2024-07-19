@@ -15,9 +15,18 @@ button {
     cursor: pointer;
 }
 
+.GoalBtn { 
+    margin-left: 15%;
+    margin-right: 0.5%;
+    background-color: #6aaa2b;
+    color: #f7f9fb;
+}
+
+.GoalBtn:hover {
+    background-color: #8CCB5E;
+}
 
 .ProfileBtn {
-    margin-left: 20%;
     margin-right: .5%;
     background-color: #cfd6dc;
     color: #36454f

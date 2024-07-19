@@ -1,0 +1,21 @@
+.TopBar {
+    display: block;
+    position: fixed;
+}
+
+.ActiveGoals {
+    margin-top: 25vh;
+    margin-left: 100vw;
+}
+
+h2 {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 400;
+    margin-bottom: 8%;
+    font-size: 20pt;
+    margin-left: 5%;
+}
+
+.GoalPageContent {
+    margin-left: 20vw;
+}
