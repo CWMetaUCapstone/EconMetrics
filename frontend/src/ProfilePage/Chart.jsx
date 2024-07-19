@@ -96,7 +96,7 @@ const Chart = ({ data }) => {
             .attr("y", -8)
 
 
-        // when pointer enters the graph latch onto clostest data point and display dot
+        // when pointer enters the graph latch onto closest data point and display dot
         function enteredGraph(){
             lines.style("mix-blend-mode", null).style("stroke", "#ddd")
             dot.attr("display", null)
