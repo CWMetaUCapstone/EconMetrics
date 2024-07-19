@@ -4,7 +4,6 @@ const Chart = ({ data }) => {
     const svgRef = useRef();
 
     useEffect(() => {
-        // chart configuration settings
         const width = 600
         const height = 500
         const margin = {top : 40, right: 20, bottom: 10, left: 90}
@@ -14,8 +13,9 @@ const Chart = ({ data }) => {
         const svg = d3.select(svgRef.current)
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
+        
+        const chartGroup = svg.append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
-            .append("g")
         
         // this creates a discrete line for each selected category
         const lineNames = d3.group(data, d => d.name);
@@ -103,16 +103,29 @@ const Chart = ({ data }) => {
         }
 
 
-        // whenever pointer moves recalculate the clostest data point
+        // whenever pointer moves recalculate the closest data point
         function movedPointer(event){
-            const [xCord, yCord] = d3.pointer(event, svg.node());
+            const [xCord, yCord] = d3.pointer(event);
             
-            const xAdjusted = xCord - margin.left;
-            const yAdjusted = yCord - margin.top;
-            
-            // find the closest data point to the pointer using distance equation and choosing min value found
-            const closestPoint = d3.least(data, d => Math.sqrt(Math.pow(xAxis(d.date) - xAdjusted, 2) + Math.pow(yAxis(d.value) - yAdjusted, 2)));
-            //const closestPoint = quadtree.find(xCord, yCord);
+            const xAdjusted = xCord - margin.left +60;
+            const yAdjusted = yCord - 10
+            const closestDateIndex = d3.leastIndex(times, (d) => Math.abs(xAxis(d) + xAxis.bandwidth() / 2 - xAdjusted));
+            const closestDate = times[closestDateIndex];
+            const pointsOnDate = data.filter(d => d.date === closestDate);
+          
+            const maxXDistance = xAxis.range()[1] - xAxis.range()[0];
+            const maxYDistance = yAxis.range()[0] - yAxis.range()[1];
+            const closestPoint = d3.least(pointsOnDate, d => {
+                // normalize distances in relation to SVG size, this essentially converts from image coordinate system to cartesian
+                const normalizedXDist = Math.abs((xAxis(d.date) + xAxis.bandwidth() / 2 - xAdjusted) / maxXDistance);
+                const normalizedYDist = Math.abs((yAxis(d.value) - yAdjusted) / maxYDistance);
+                // now that we have cartesian style coordinates, find the Euclidean distance 
+                return Math.sqrt(normalizedXDist * normalizedXDist + normalizedYDist * normalizedYDist);
+            });
+
+        
+
+
             dot.attr("transform", `translate(${xAxis(closestPoint.date) + margin.left + 15}, ${yAxis(closestPoint.value) + 10})`)
             dot.select("text").text(`${closestPoint.name}: ${closestPoint.value}`);
             
