@@ -10,7 +10,7 @@ function Goals() {
         <div className='GoalPageContent'>
             <div className='ActiveGoals'></div>
                 <div className='ActiveGoalsContent'>
-                        <h2> Your Goals</h2>
+                        <h2> Your Active Goals</h2>
                         <div className='GoalsList'>
                         </div>
                 </div>
