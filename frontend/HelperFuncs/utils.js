@@ -146,8 +146,8 @@ export const getRows = (transactions, similarUsers) => {
     for (const category in transactions) {
         if (transactions[category]) {
             const { total_percent, details } = transactions[category];
-            const roundedTotalPercent = parseFloat(total_percent.toFixed(2));
-            // by default, average and difference are N/A to cover case of no simlar users
+            let roundedTotalPercent = Math.round(total_percent * 100) / 100;
+            // by default, average and difference are N/A to cover case of no similar users
             let average = 'N/A'
             let difference = 'N/A'
             // filter to ensure that similarUsers has at least one field for the category
@@ -155,8 +155,8 @@ export const getRows = (transactions, similarUsers) => {
             if (similarUsersForCategory.length > 0) {
                 const medianValues = similarUsersForCategory.map((user) => user[category].total_percent);
                 const medianValue = median(medianValues);
-                average = parseFloat(medianValue.toFixed(2));
-                difference = parseFloat((roundedTotalPercent - average).toFixed(2));
+                average = Math.round(medianValue * 100) / 100;
+                difference = Math.round((roundedTotalPercent - average) * 100) / 100;
             }
             rows.push({
                 category: [category],
@@ -180,14 +180,14 @@ export const getRows = (transactions, similarUsers) => {
                   // check to make sure we actually have data to take the median of, if not we have the default 'N/A'
                   if (detailPercentages.length > 0) {
                     const detailMedian = median(detailPercentages);
-                    detailAverage = parseFloat(detailMedian.toFixed(2));
-                    detailDifference = parseFloat((detail.percent - detailAverage).toFixed(2));
+                    detailAverage = Math.round(detailMedian * 100) / 100;
+                    detailDifference = Math.round((detail.percent - detailAverage) * 100) / 100;
                   }
 
                   rows.push({
                     category: [category, detail.name],
-                    your_percent: `${parseFloat(detail.percent.toFixed(2))}%`,
-                    your_percent_value: parseFloat(detail.percent.toFixed(2)),
+                    your_percent: `${Math.round(detail.percent * 100) / 100}%`,
+                    your_percent_value: Math.round(detail.percent * 100) / 100,
                     average: `${detailAverage}`,
                     difference: `${detailDifference}`
                   })
@@ -347,4 +347,80 @@ function median(arr) {
     }
 
     return sorted[middle];
+}
+
+
+/*
+helper function to add selection options to react-select based on what categories the user has in their transaction data
+*/
+export function getSelectData(transactions){
+    const result = [];
+    for (const category in transactions) {
+        if (transactions[category]) {
+            const { details } = transactions[category];
+            result.push({
+                label: category,
+                value: category 
+            })
+            for(let i=0; i < details.length; i++){
+                const detail = details[i];
+                if(detail.name != category){
+                    result.push({
+                        label: detail.name,
+                        value: detail.name
+                      })
+                }
+                }
+            }
+        }
+    return result;
+}
+
+
+/*
+helper function to return a json of all historical data for the selected option for user @ userId
+from react-select for graphing
+*/
+export const fetchHistoricalData = async(userId, options) => {
+    /* because the select element isMulit, we need to extract the most recently added element
+     as that will adhere to the graph request made */
+    let selectedOption = options.value
+    console.log('s', selectedOption)
+    const response = await fetch(`http://localhost:3000/historical/${selectedOption}/${userId}`,
+        { method: 'GET'}
+    )
+    if(!response.ok){
+        throw new Error('Network response was not ok at fetchHistoricalData', Error);
+    }
+    const data = await response.json();
+    return data;
+}
+
+
+/*
+returns the ID for the most recent transaction associated with [userId]
+*/
+export const fetchLatestTransID = async(userId) => {
+    const response = await fetch(`http://localhost:3000/transId/${userId}`, 
+    { method: 'GET' })
+    if(!response.ok){
+        throw new Error('Network response was not ok at fetchLatestTransId', Error);
+    }
+    // endpoints cannot return ints so we have to convert int -> string -> int
+    const data = await response.text();
+    return  parseInt(data, 10);
+}
+
+
+/*
+helper function to format fetched historical data into a graph-friendly format and display onto canvasJs 
+*/
+export function populatePlot( historicalData, option){
+    let optionName =  option.value
+    return {
+        type: "line",
+        name: optionName,
+        showInLegence: true,
+        dataPoints: historicalData
+    }
 }

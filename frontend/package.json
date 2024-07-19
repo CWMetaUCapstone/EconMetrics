@@ -12,6 +12,8 @@
   "dependencies": {
     "@ag-grid-community/client-side-row-model": "^32.0.0",
     "@ag-grid-enterprise/row-grouping": "^32.0.0",
+    "@canvasjs/charts": "^3.9.0",
+    "@canvasjs/react-charts": "^1.0.2",
     "@mapbox/search-js-react": "^1.0.0-beta.21",
     "ag-grid-charts-enterprise": "^32.0.0",
     "ag-grid-enterprise": "^32.0.0",

@@ -73,4 +73,5 @@ model Transactions {
   savings_account       Float?
   time                  DateTime @default(now()) // column to store the timestamp at which a trasaction was logged so we can fetch most recent
   @@index([time])
+  transaction_date      DateTime? // this stores the first of the month, entered manually for now to test
 }
