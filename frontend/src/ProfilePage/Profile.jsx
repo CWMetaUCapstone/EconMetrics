@@ -43,6 +43,9 @@ function Profile() {
     const [pieSrc , setPieSrc] = useState('');
     const [selectedOptions, setSelectedOptions] = useState([]);
 
+    // chart is cached as a url so selected options persist on graph for refresh
+    const [chartSVG, setChartSVG] = useState('');
+
     const fetchData = async () => {
         try {
             const profile = await fetchProfile(userId);
@@ -77,6 +80,19 @@ function Profile() {
             setPieSrc(`../../public/pie_chart_${userId}_${mostRecentTransId}.png`);
         }
     }, [mostRecentTransId]); // Include userId if it's necessary for the dependency array
+
+    useEffect(() => {
+        // retrieve and set svg src and selected options from localStorage if there's data saved
+        const savedOptions = localStorage.getItem('selectedOptions');
+        const savedSVG = localStorage.getItem('chartSVG');
+        if (savedOptions) {
+            setSelectedOptions(JSON.parse(savedOptions));
+        }
+        if (savedSVG) {
+            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedSVG)))}`;
+            setChartSVG(imgSrc);
+        }
+    }, []);
     
     // this helper sets "Category" to be the column rows are grouped under 
     const autoGroupColumnDef = useMemo(() => {
@@ -107,16 +123,33 @@ function Profile() {
     }, [selectedOptions]);
     
     const getHistory = async (options) => {
-    // Fetch historical data for all selected options
-    const dataPromises = options.map(option =>
-        fetchHistoricalData(userId, option.value) // Pass the value of each option to the fetch function
-    );
-    const results = await Promise.all(dataPromises);
-    const combinedData = results.flat();
-    setChartData(combinedData); // Update the chart data with combined results from all selected options
-};
+        // Fetch historical data for all selected options
+        const dataPromises = options.map(option =>
+            fetchHistoricalData(userId, option.value) // Pass the value of each option to the fetch function
+        );
+        const results = await Promise.all(dataPromises);
+        const combinedData = results.flat();
+        setChartData(combinedData); // Update the chart data with combined results from all selected options
+    };
 
     const animatedComponents = makeAnimated(); 
+
+    /* when a new graph selection is made / deleted, set select options to match
+    the value of selectedOptions, tracked through the [options] parameter. 
+    The [selectedOptions] item in localStorage is also set to match this change
+    */
+    const handleSelectChange = (options) => {
+        setSelectedOptions(options);
+        localStorage.setItem('selectedOptions', JSON.stringify(options));
+    };
+
+    const saveSvgToLocalStorage = (svgElement) => {
+        // svg is saved in local storage as a src url
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        localStorage.setItem('chartSVG', svgData);
+        setChartSVG(svgData);
+    };
+
 
     return (
         <>
@@ -182,12 +215,14 @@ function Profile() {
                         isClearable={true}
                         className='graphSelector'
                         isMulti
-                        onChange={setSelectedOptions}
+                        onChange={handleSelectChange}
+                        value={selectedOptions}
                     />
                 </div>
                 <div className='chart'>
-                    <Chart data={chartData}/>
+                    <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
                 </div>
+                {chartSVG && <img src={chartSVG}/>}
             </div>
         </div>
         </>
