@@ -125,11 +125,11 @@ function Profile() {
     const getHistory = async (options) => {
         // Fetch historical data for all selected options
         const dataPromises = options.map(option =>
-            fetchHistoricalData(userId, option.value) // Pass the value of each option to the fetch function
+            fetchHistoricalData(userId, option.value)
         );
         const results = await Promise.all(dataPromises);
         const combinedData = results.flat();
-        setChartData(combinedData); // Update the chart data with combined results from all selected options
+        setChartData(combinedData);
     };
 
     const animatedComponents = makeAnimated(); 
