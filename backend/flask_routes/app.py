@@ -117,7 +117,7 @@ class Transactions(db.Model):
     investment = db.Column(db.Numeric(13, 2), nullable=True)
     savings_account = db.Column(db.Numeric(13, 2), nullable=True)
     time = db.Column(db.DateTime, server_default=func.now())
-    transaction_date = db.Column(db.DateTime, nullable=True)
+    transaction_date = db.Column(db.Integer, nullable=True)
 
 
 # Flask Routes
@@ -534,13 +534,9 @@ objects corresponding to historical data points
 def historical_trans_json(selectedOption, transactions):
     result = []
     for transaction in transactions:
-        year = transaction.transaction_date.year
-        month = transaction.transaction_date.month
-        # format the date as "month - year"
-        date = f"{month:02d}-{year}"
         # interpret null entries as 0%
         percent_value = getattr(transaction, selectedOption) or 0
-        result.append({'y': float(percent_value), 'label': date})
+        result.append({'value': float(percent_value), 'date': transaction.transaction_date, 'name': selectedOption})
 
     return result
 

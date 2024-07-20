@@ -381,11 +381,9 @@ export function getSelectData(transactions){
 helper function to return a json of all historical data for the selected option for user @ userId
 from react-select for graphing
 */
-export const fetchHistoricalData = async(userId, options) => {
+export const fetchHistoricalData = async(userId, selectedOption) => {
     /* because the select element isMulit, we need to extract the most recently added element
      as that will adhere to the graph request made */
-    let selectedOption = options.value
-    console.log('s', selectedOption)
     const response = await fetch(`http://localhost:3000/historical/${selectedOption}/${userId}`,
         { method: 'GET'}
     )
@@ -409,18 +407,4 @@ export const fetchLatestTransID = async(userId) => {
     // endpoints cannot return ints so we have to convert int -> string -> int
     const data = await response.text();
     return  parseInt(data, 10);
-}
-
-
-/*
-helper function to format fetched historical data into a graph-friendly format and display onto canvasJs 
-*/
-export function populatePlot( historicalData, option){
-    let optionName =  option.value
-    return {
-        type: "line",
-        name: optionName,
-        showInLegence: true,
-        dataPoints: historicalData
-    }
 }

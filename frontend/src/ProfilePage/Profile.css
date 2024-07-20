@@ -68,7 +68,7 @@ h3 {
     margin-top: 10%;
     width: 55vw;
     background-color: #F3F5F7;
-    height: 200vh;
+    height: 240vh;
 }
 
 .ag-theme-alpine {
@@ -92,7 +92,6 @@ h4 {
     margin-left: 70%;
 }
 
-.canvasChart {
-    width: 80%;
+.chart {
     margin-left: 10%;
 }
