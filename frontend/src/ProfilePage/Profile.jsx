@@ -222,7 +222,6 @@ function Profile() {
                 <div className='chart'>
                     <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
                 </div>
-                {chartSVG && <img src={chartSVG}/>}
             </div>
         </div>
         </>
