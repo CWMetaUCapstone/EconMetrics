@@ -1,0 +1,97 @@
+.Modal {
+    position: fixed; 
+    z-index: 2;
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: scroll;
+    background-color: rgba(0,0,0,0.4);
+ }
+
+.ModalContent {
+    background-color: #fefefe;
+    margin: 5% auto;
+    border: 1px solid #888;
+    width: 50%;
+    height: auto;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+    padding-bottom: 5%;
+    padding-top: 1%;
+}
+
+.ModalContent label {
+    margin-top: 4%;
+    font-size: 11pt;
+    display: block;
+    margin-bottom: 1%;
+}
+
+.ModalContent input {
+    font-size: 11pt;
+    width: 10vw;
+    height: 5vh;
+    padding: 4%;
+    border-radius: 12px;
+    border: none;
+    background-color: #f7f9fb;
+}
+
+.CloseButton {
+    color: #aaa;
+    margin-left: 90%;
+    font-size: 32pt;
+    font-weight: bold;
+}
+
+.CloseButton:hover,
+.CloseButton:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+h2 {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 400;
+ }
+
+.TitleContainer {
+    display: flex; 
+    width: 100%;
+    margin-top: -5%;
+}
+
+.FormColumns {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 5vw;
+    margin-top: -3%;
+    margin-left: 22%;
+    margin-bottom: 10%;
+}
+
+.Selector {
+    background-color: #f7f9fb;
+    padding: 2%;
+    border-radius: 12px;
+    font-size: 11pt;
+    width: 13vw;
+}
+
+.UpdateBtn {
+    background-color: #36454f;
+    color: #f7f9fb;
+    padding: 2%;
+    margin-top: -5%;
+    margin-left: 65%;
+}
+
+.UpdateBtn:hover {
+    background-color: #47565f;
+    cursor: pointer;
+}

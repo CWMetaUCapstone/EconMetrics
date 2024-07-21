@@ -1,5 +1,5 @@
 import './Profile.css'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
@@ -11,6 +11,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import Chart from './Chart';
+import EditProfileModal from './EditProfileModal';
 
 
 function Profile() {
@@ -23,6 +24,7 @@ function Profile() {
         'children':'',
         'job': '',
         'state': '',
+        'postal': '',
         'id': ''
     })
     const [similarUsers, setSimilarUsers] = useState([]);
@@ -38,10 +40,11 @@ function Profile() {
     ]);
 
     const [chartData, setChartData] = useState([]);
-    const [selectData , setSelectData] = useState([]);
+    const [selectData, setSelectData] = useState([]);
     const [mostRecentTransId, setMostRecentTransId] = useState(0);
-    const [pieSrc , setPieSrc] = useState('');
+    const [pieSrc, setPieSrc] = useState('');
     const [selectedOptions, setSelectedOptions] = useState([]);
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false)
 
     // chart is cached as a url so selected options persist on graph for refresh
     const [chartSVG, setChartSVG] = useState('');
@@ -63,6 +66,13 @@ function Profile() {
             console.error('Error fetching data:', error);
         }
     };
+
+    /* if modal view changes, 
+    it's likely that profile data changed so we need to fetch updated data for profile and similar users
+    */
+    useEffect(() => {
+        fetchData();
+    }, [showEditProfileModal])
 
     useEffect(() => {
         fetchData();
@@ -112,7 +122,6 @@ function Profile() {
         return data.category;
     }, []);
 
-
     useEffect(() => {
         if (selectedOptions.length > 0) {
             getHistory(selectedOptions);
@@ -125,11 +134,11 @@ function Profile() {
     const getHistory = async (options) => {
         // Fetch historical data for all selected options
         const dataPromises = options.map(option =>
-            fetchHistoricalData(userId, option.value) // Pass the value of each option to the fetch function
+            fetchHistoricalData(userId, option.value)
         );
         const results = await Promise.all(dataPromises);
         const combinedData = results.flat();
-        setChartData(combinedData); // Update the chart data with combined results from all selected options
+        setChartData(combinedData); 
     };
 
     const animatedComponents = makeAnimated(); 
@@ -148,6 +157,14 @@ function Profile() {
         const svgData = new XMLSerializer().serializeToString(svgElement);
         localStorage.setItem('chartSVG', svgData);
         setChartSVG(svgData);
+    };
+
+    const showModal = () => {
+        setShowEditProfileModal(true)
+    };
+
+    const closeModal = () => {
+        setShowEditProfileModal(false)
     };
 
 
@@ -175,10 +192,10 @@ function Profile() {
                         <p>Children: {profileData.children}</p>
                     </div>
                     <div className='ProfilePart'>
-                        <p>Job: {profileData.jobs}</p>
+                        <p>Job: {profileData.job}</p>
                     </div>
                 </div>
-                <button className='EditProfileBtn'>Edit Profile</button>
+                <button className='EditProfileBtn' onClick={showModal}>Edit Profile</button>
             </div>
         </div>
         <div className='TransactionInfo'>
@@ -222,9 +239,10 @@ function Profile() {
                 <div className='chart'>
                     <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
                 </div>
-                {chartSVG && <img src={chartSVG}/>}
             </div>
+            <EditProfileModal view={showEditProfileModal} closeView={closeModal} profileData={profileData}/>
         </div>
+
         </>
     );
 }

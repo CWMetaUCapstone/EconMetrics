@@ -170,10 +170,11 @@ def get_profile_data(userId):
     user = User.query.get(userId)
     return jsonify({'city' : user.city , 
                     'state' : user.state,
+                    'postal' : user.postal,
                     'salary' : user.salary, 
                     'roommates' : user.roommates, 
                     'children': user.children,
-                    'jobs' : user.job,
+                    'job' : user.job,
                     'id' : user.id})
 
 
