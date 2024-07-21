@@ -4,6 +4,7 @@ import SignUp from './HomePage/SignHandlers/SignUp'
 import SignIn from './HomePage/SignHandlers/SignIn';
 import CreateAccount from './ProfilePage/CreateAccount'
 import SearchResults from './SearchPage/SearchResults';
+import Goals from './GoalPage/Goals';
 import './App.css'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/createprofile/:userId" element={<CreateAccount/>}/>
         <Route path="/search/:searchTerm" element={<SearchResults/>}/>
         <Route path="/profile/:userId/search/:searchTerm" element={<SearchResults/>}/>
+        <Route path = "/goals/:userId" element={<Goals/>}/>
       </Routes>
     </BrowserRouter>
   )
