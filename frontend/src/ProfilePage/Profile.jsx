@@ -46,7 +46,7 @@ function Profile() {
     const [pieSrc, setPieSrc] = useState('');
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [showEditProfileModal, setShowEditProfileModal] = useState(false)
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
 
     // chart is cached as a url so selected options persist on graph for refresh
     const [chartSVG, setChartSVG] = useState('');
