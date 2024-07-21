@@ -17,6 +17,7 @@ function ProfileTopBar () {
             </div>
             <p className='TopName' onClick={() => navigate(`/search/${menloPark}`)}>EconMetrics</p>
             <Search/>
+            <button className='GoalBtn' onClick={() => navigate(`/goals/${userId}`)}>Goals</button>
             <button className='ProfileBtn' onClick={() => navigate(`/profile/${userId}`)}>Your Profile</button>
             <button className='LogOutBtn' onClick={() => navigate(`/search/${menloPark}` , {replace: true})}>Log Out</button>
         </div>
