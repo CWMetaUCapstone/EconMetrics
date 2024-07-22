@@ -96,6 +96,14 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
         svg.append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top - (margin.top - margin.bottom)})`)
             .call(d3.axisLeft(yAxis))
+
+        svg.append("g")
+            .attr("transform", `translate(${margin.left * 3}, ${margin.top})`)
+            .append("text")
+                .attr("y", margin.bottom)
+                .attr("fill", "currentColor")
+                .attr("text-anchor", "end")
+                .text("Percent of Expenditure");
         
         // each category is divided into it's own svg g element for modular control
         const categoryGroups = svg.selectAll("g.category")
