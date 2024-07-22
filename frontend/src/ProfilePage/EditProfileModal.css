@@ -1,6 +1,6 @@
 .Modal {
     position: fixed; 
-    z-index: 2;
+    z-index: 6;
     left: 0;
     top: 0;
     width: 100%; 

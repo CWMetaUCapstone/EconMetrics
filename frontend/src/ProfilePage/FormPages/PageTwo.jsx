@@ -9,7 +9,6 @@ function PageTwo ( {backPage}) {
     return (
         <>
         <PlaidLink userId={userId}/>
-        
         <button className="back-btn" onClick={backPage}>Previous</button>
         </>
     )

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { usePlaidLink } from "react-plaid-link";
 import { fetchLinkToken, fetchAccessToken, postTransactions} from '../../../HelperFuncs/plaidHelp';
 import { useNavigate } from 'react-router-dom';
+import { Oval } from 'react-loader-spinner'
 import './PlaidLink.css'
 
 function PlaidLink( {userId }) {
   const [token, setToken] = useState(null);
+  const [loading, setLoading] =  useState(false);
 
   const navigate = useNavigate();
 
@@ -31,16 +33,14 @@ function PlaidLink( {userId }) {
   */
   const onSuccess = async (public_token) => {
     try {
+      setLoading(true)
       // because there are multiple unused variables here we can't simplify with '_'
       const accessToken = await fetchAccessToken(userId , public_token)
       const transactions = await postTransactions(userId)
-      /* 
-      if the user clicks back and gets directed to an undefined endpoint, 
-      the id to route to profile is kept in storage so we can still route to profile page
-      */
-      sessionStorage.setItem('userId', userId);
       navigate(`/profile/${userId}`, {replace: true});
+      setLoading(false)
     } catch (error) {
+      setLoading(false)
       console.error('Error exchanging public token:', error);
     }
   };
@@ -65,9 +65,21 @@ function PlaidLink( {userId }) {
 
   return (
     <>
-      <button className='plaid-btn' onClick={() => token && open()}> 
-        Connect Bank Account          &gt;
-      </button>
+      {loading ? (
+        <div className="LoadOverlay">
+          <Oval 
+          height="80" 
+          width="80" 
+          color="#4fa94d"
+          />
+        </div>
+      ) : (
+        <div>
+          <button className='plaid-btn' onClick={() => token && open()}>
+            Connect Bank Account &gt;
+          </button>
+        </div>
+      )}
     </>
   );
 }
