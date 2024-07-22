@@ -31,7 +31,7 @@ def clean_transaction_data(transaction_json):
                     cleaned_data.append(clean_transaction)
         return cleaned_data
     except Exception as e:
-        raise (f"Error cleaning transaction data: {e}")
+        raise (f"error at clean_transaction_data: {e}")
          
 
 
@@ -113,6 +113,4 @@ def create_pie_plot(transaction_data, userId, transactionId):
         plt.savefig(directory, transparent=True)
         plt.close()
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
-
-    
+        print(f"error occurred at create_pie_plot: {str(e)}")

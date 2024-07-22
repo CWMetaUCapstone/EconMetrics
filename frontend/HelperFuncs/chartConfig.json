@@ -1,0 +1,14 @@
+{
+    "width": 600, 
+    "height": 500,
+    "margins": 
+        {
+            "top": 40,
+            "right": 20,
+            "bottom": 10,
+            "left": 90
+        },
+    "dot_radius": 2.5, 
+    "font_size": 12,
+    "font-family":  "Inter Tight"
+}

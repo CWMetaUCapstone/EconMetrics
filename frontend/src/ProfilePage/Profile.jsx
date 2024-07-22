@@ -89,7 +89,7 @@ function Profile() {
         if(mostRecentTransId != 0){
             setPieSrc(`../../public/pie_chart_${userId}_${mostRecentTransId}.png`);
         }
-    }, [mostRecentTransId]); // Include userId if it's necessary for the dependency array
+    }, [mostRecentTransId]);
 
     useEffect(() => {
         // retrieve and set svg src and selected options from localStorage if there's data saved

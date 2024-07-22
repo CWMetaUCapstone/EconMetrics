@@ -137,13 +137,13 @@ def post_req_handler():
         db.session.rollback()
         # Check if the error is due to a duplicate email
         if 'duplicate key value violates unique constraint' in str(e):
-            return jsonify({'error': 'email already has an account'}), 409
+            return jsonify({'error': 'error at post_req_handler, email already has an account'}), 409
         else:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': 'error at post_req_handler ' + str(e)}), 500
     except Exception as e:
-        app.logger.error(f"Failed to create profile: {str(e)}")
+        app.logger.error(f"error at post_req_handler, failed to create profile: {str(e)}")
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error at post_req_handler': str(e)}), 500
 
 
 @app.route('/profiles/<userId>', methods=['PUT'])
@@ -162,7 +162,7 @@ def put_req_handler(userId):
         return jsonify({'message': 'Profile updated'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error at put_req_handler': str(e)}), 500
 
 
 @app.route('/profiles/<userId>', methods=['GET'])
@@ -187,7 +187,7 @@ def login_post_handler():
     if user and bcrypt.checkpw(password, user.password.encode('utf-8')):
         return jsonify({'message': 'Login successful', 'userId': user.id}), 202
     else:
-        return jsonify({'error': 'Invalid credentials'}), 401
+        return jsonify({'error at login_post_handler'}), 401
 
 
 @app.route('/api/create_link_token/<userId>', methods=['POST'])
@@ -230,8 +230,8 @@ def exchange_public_token(userId):
         db.session.commit()
         return jsonify({'message': 'Access token exchanged successfully'})
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        print(f"error at exchange_public_token: {str(e)}")
+        return jsonify({'error at exchange_public_token': str(e)}), 500
 
 
 @app.route('/api/transactions/sync/<userId>', methods=['POST'])
@@ -255,8 +255,8 @@ def transactions_sync(userId):
         db_status = save_transaction(userId, user_transaction_data)
         return jsonify({'message': db_status, 'data': user_transaction_data})
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        return jsonify({'error': 'An error occurred, check server logs for details'}), 500
+        print(f"error at transactions_sync: {str(e)}")
+        return jsonify({'error': 'error at transactions_sync'}), 500
 
 
 @app.route('/transactions/<userId>', methods=['GET'])
@@ -271,10 +271,10 @@ def get_latest_transaction(userId):
             create_pie_plot(transaction_json, userId, transaction.id)
             return transaction_json
         else:
-            return jsonify({'error': 'unable to find transaction'})
+            return jsonify({'error at get_latest_transaction': 'unable to find transaction'})
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        return jsonify({'error': 'An error occurred, check server logs for details'}), 500
+        print(f"error at get_latest_transaction: {str(e)}")
+        return jsonify({'error': 'error at get_latest_transaction'}), 500
     
 
 @app.route('/search/<query>', methods=['GET'])
@@ -283,7 +283,7 @@ def get_search_results(query):
         query_results = query_db(query)
         return jsonify(query_results), 200  
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error at get_search_results ': str(e)}), 500
     
 
 @app.route('/users/<searchTerm>', methods=['GET'])
@@ -319,7 +319,7 @@ def get_users(searchTerm):
             result.append(user_dict)
         return jsonify(result), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error at get_users': str(e)}), 500
 
 
 @app.route('/similar', methods=['POST'])
@@ -329,7 +329,7 @@ def get_similar_users():
         similar_transactions = find_similar_users(profile_data)
         return jsonify(similar_transactions)
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"error at get_similar_users: {str(e)}")
 
 
 @app.route('/transId/<userId>', methods=['GET'])
@@ -375,8 +375,8 @@ def save_transaction(userId, transactionData):
         return "Transaction data saved successfully."
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"Error saving transaction for user {userId}: {e}")
-        return f"An error occurred: {str(e)}"
+        app.logger.error(f"error saving transaction for user {userId}: {e} at save_transaction")
+        return f"an error occurred at save_transaction: {str(e)}"
 
 
 """
@@ -507,7 +507,7 @@ def handle_salary_query(query, user_query):
                 salary_list.append(user.salary)
             return salary_list
     except ValueError:
-        return []
+        return 'error at handle_salary_query'
 
 
 """
