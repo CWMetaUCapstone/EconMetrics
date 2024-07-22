@@ -68,7 +68,7 @@ h3 {
     margin-top: 10%;
     width: 55vw;
     background-color: #F3F5F7;
-    height: 240vh;
+    height: 300vh;
 }
 
 .ag-theme-alpine {
@@ -92,6 +92,21 @@ h4 {
     margin-left: 70%;
 }
 
-.chart {
+.TimeChart {
     margin-left: 10%;
+}
+
+.ClickedUserDetails {
+    margin-left: 10%;
+    margin-top: 5%;
+    display: flex;
+    gap: 2%;
+}
+
+.Checkboxes {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5%;
 }

@@ -10,7 +10,10 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import Chart from './Chart';
+import TimeChart from './Graphs/TimeChart'
+import CompBoxPlot from './Graphs/CompBoxPlot';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 
 function Profile() {
@@ -37,14 +40,27 @@ function Profile() {
         { field: "difference", headerName: "Difference Between You and Similar Average" }
     ]);
 
-    const [chartData, setChartData] = useState([]);
+    const [overTimeChartData, setOverTimeChartData] = useState([]);
     const [selectData , setSelectData] = useState([]);
     const [mostRecentTransId, setMostRecentTransId] = useState(0);
     const [pieSrc , setPieSrc] = useState('');
     const [selectedOptions, setSelectedOptions] = useState([]);
 
-    // chart is cached as a url so selected options persist on graph for refresh
-    const [chartSVG, setChartSVG] = useState('');
+    // over time chart is cached as a url so selected options persist on graph for refresh
+    const [overTimeChartSVG, setOverTimeChartSVG] = useState('');
+    const [boxPlotSVG, setBoxPlotSVG] = useState('');
+
+    const [yourStatsCheckbox, setYourStatsCheckbox] = useState(false);
+    const [boxPlotCheckbox, setBoxPlotCheckbox] = useState(false);
+
+    const [clickedUserId, setClickedUserId] = useState(0)
+    const [clickedUserDetails, setClickedUserDetails] = useState({
+        'city': '',
+        'salary': '',
+        'job': '',
+        'children': 0,
+        'roommates': 0
+    })
 
     const fetchData = async () => {
         try {
@@ -84,15 +100,55 @@ function Profile() {
     useEffect(() => {
         // retrieve and set svg src and selected options from localStorage if there's data saved
         const savedOptions = localStorage.getItem('selectedOptions');
-        const savedSVG = localStorage.getItem('chartSVG');
+        const savedOverTimeSVG = localStorage.getItem('overTimeSVG');
+        const savedBoxPlotSVG = localStorage.getItem('boxPlotSVG')
+        const storedYourStatsCheckbox = localStorage.getItem('yourStatsCheckbox');
+        const storedBoxPlotCheckbox = localStorage.getItem('boxPlotCheckbox');
+        if (storedBoxPlotCheckbox) {
+            // boolean data is stored as a string in local storage so we convert back to bool
+            setBoxPlotCheckbox(storedBoxPlotCheckbox === 'true');
+        }
+        if (storedYourStatsCheckbox) {
+            setYourStatsCheckbox(storedYourStatsCheckbox === 'true')
+        }
         if (savedOptions) {
             setSelectedOptions(JSON.parse(savedOptions));
         }
-        if (savedSVG) {
-            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedSVG)))}`;
-            setChartSVG(imgSrc);
+        if (savedBoxPlotSVG) {
+            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedBoxPlotSVG)))}`;
+            setBoxPlotSVG(imgSrc);
+        }
+        if (savedOverTimeSVG) {
+            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedOverTimeSVG)))}`;
+            setOverTimeChartSVG(imgSrc);
         }
     }, []);
+
+    useEffect(() => {
+        if(clickedUserId != 0){
+            const clickedOnUser = similarUsers.filter(users => users.id === clickedUserId)[0]
+            setClickedUserDetails(clickedOnUser)
+        }
+    }, [clickedUserId])
+
+    useEffect(() => {
+        if (selectedOptions.length > 0) {
+            getHistory(selectedOptions);
+        } else {
+            // clear chartData if there are no selected options
+            setOverTimeChartData([]);
+        }
+    }, [selectedOptions]);
+
+    useEffect(() => {
+        const boxDataString = boxPlotCheckbox.toString();
+        localStorage.setItem('boxPlotCheckbox', boxDataString);
+    }, [boxPlotCheckbox]);
+
+    useEffect(() => {
+        const yourStatsDataString = yourStatsCheckbox.toString();
+        localStorage.setItem('yourStatsCheckbox', yourStatsDataString);
+    }, [yourStatsCheckbox])
     
     // this helper sets "Category" to be the column rows are grouped under 
     const autoGroupColumnDef = useMemo(() => {
@@ -104,6 +160,7 @@ function Profile() {
         };
       }, []);
     
+    
     /*
     this function sets the path that row data is grouped by to be the category field of row elements
     [data] is by default analagous to the rowData passed into the AG-Grid table
@@ -112,16 +169,6 @@ function Profile() {
         return data.category;
     }, []);
 
-
-    useEffect(() => {
-        if (selectedOptions.length > 0) {
-            getHistory(selectedOptions);
-        } else {
-            // clear chartData if there are no selected options
-            setChartData([]);
-        }
-    }, [selectedOptions]);
-    
     const getHistory = async (options) => {
         // Fetch historical data for all selected options
         const dataPromises = options.map(option =>
@@ -129,7 +176,7 @@ function Profile() {
         );
         const results = await Promise.all(dataPromises);
         const combinedData = results.flat();
-        setChartData(combinedData);
+        setOverTimeChartData(combinedData);
     };
 
     const animatedComponents = makeAnimated(); 
@@ -143,13 +190,26 @@ function Profile() {
         localStorage.setItem('selectedOptions', JSON.stringify(options));
     };
 
-    const saveSvgToLocalStorage = (svgElement) => {
+    const saveOverTimeSvgToLocalStorage = (svgElement) => {
         // svg is saved in local storage as a src url
-        const svgData = new XMLSerializer().serializeToString(svgElement);
-        localStorage.setItem('chartSVG', svgData);
-        setChartSVG(svgData);
+        const overTimeSVGData = new XMLSerializer().serializeToString(svgElement);
+        localStorage.setItem('overTimeSVG', overTimeSVGData);
+        setOverTimeChartSVG(overTimeSVGData);
     };
 
+    const saveBoxPlotSvgToLocalStorage = (svgElement) => {
+        const boxSVGData = new XMLSerializer().serializeToString(svgElement)
+        localStorage.setItem('boxPlotSVG', boxSVGData)
+        setBoxPlotSVG(boxSVGData)
+    };
+
+    const handleBoxPlotChange = () => {
+        setBoxPlotCheckbox(prev => !prev);
+    };
+
+    const handleYourStatsBoxChange = () => {
+        setYourStatsCheckbox(prev => !prev)
+    };
 
     return (
         <>
@@ -219,9 +279,48 @@ function Profile() {
                         value={selectedOptions}
                     />
                 </div>
-                <div className='chart'>
-                    <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
+                <div className='TimeChart'>
+                    <TimeChart data={overTimeChartData} onSaveSvg={saveOverTimeSvgToLocalStorage}/>
                 </div>
+                <div className='Checkboxes'>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                color='success'
+                                checked={yourStatsCheckbox}
+                                onChange={handleYourStatsBoxChange}
+                            />
+                        }
+                        label="Show Your Stats"
+                    />
+                  <FormControlLabel
+                        control={
+                            <Checkbox
+                                color='success'
+                                checked={boxPlotCheckbox}
+                                onClick={handleBoxPlotChange}
+                            />
+                        }
+                        label="Show Box Plots"
+                    />
+                </div>
+                <div className='BoxPlot'>
+                    <CompBoxPlot userData={transactions} similarUserData={similarUsers} OnClickedUserId={setClickedUserId}
+                    onSaveSvg={saveBoxPlotSvgToLocalStorage}/>
+                </div>
+                {
+                clickedUserId !== 0 ? (
+                    <div className='ClickedUserDetails'> 
+                        <p>City: {clickedUserDetails.city}</p>
+                        <p>Salary: {clickedUserDetails.salary}</p>
+                        <p>Job: {clickedUserDetails.job}</p>
+                        <p>Children: {clickedUserDetails.children}</p>
+                        <p>Roomamtes: {clickedUserDetails.roommates}</p>
+                    </div>
+                ) : (
+                    <div></div>
+                )
+                }
             </div>
         </div>
         </>
