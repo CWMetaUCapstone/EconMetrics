@@ -1,5 +1,5 @@
 import './Profile.css'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
@@ -11,6 +11,8 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import Chart from './Chart';
+import EditProfileModal from './EditProfileModal';
+import { Oval } from 'react-loader-spinner'
 
 
 function Profile() {
@@ -23,6 +25,7 @@ function Profile() {
         'children':'',
         'job': '',
         'state': '',
+        'postal': '',
         'id': ''
     })
     const [similarUsers, setSimilarUsers] = useState([]);
@@ -38,16 +41,19 @@ function Profile() {
     ]);
 
     const [chartData, setChartData] = useState([]);
-    const [selectData , setSelectData] = useState([]);
+    const [selectData, setSelectData] = useState([]);
     const [mostRecentTransId, setMostRecentTransId] = useState(0);
-    const [pieSrc , setPieSrc] = useState('');
+    const [pieSrc, setPieSrc] = useState('');
     const [selectedOptions, setSelectedOptions] = useState([]);
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     // chart is cached as a url so selected options persist on graph for refresh
     const [chartSVG, setChartSVG] = useState('');
 
     const fetchData = async () => {
         try {
+            setLoading(true)
             const profile = await fetchProfile(userId);
             setProfileData(profile);
             if (profile.city != '') {
@@ -59,10 +65,19 @@ function Profile() {
                 setTransaction(transData);
                 setSelectData(getSelectData(transData));
             }
+            setLoading(false)
         } catch (error) {
+            setLoading(false)
             console.error('Error fetching data:', error);
         }
     };
+
+    /* if modal view changes, 
+    it's likely that profile data changed so we need to fetch updated data for profile and similar users
+    */
+    useEffect(() => {
+        fetchData();
+    }, [showEditProfileModal])
 
     useEffect(() => {
         fetchData();
@@ -112,7 +127,6 @@ function Profile() {
         return data.category;
     }, []);
 
-
     useEffect(() => {
         if (selectedOptions.length > 0) {
             getHistory(selectedOptions);
@@ -129,7 +143,7 @@ function Profile() {
         );
         const results = await Promise.all(dataPromises);
         const combinedData = results.flat();
-        setChartData(combinedData);
+        setChartData(combinedData); 
     };
 
     const animatedComponents = makeAnimated(); 
@@ -150,80 +164,100 @@ function Profile() {
         setChartSVG(svgData);
     };
 
+    const showModal = () => {
+        setShowEditProfileModal(true)
+    };
+
+    const closeModal = () => {
+        setShowEditProfileModal(false)
+    };
 
     return (
         <>
-        <div className='TopBar'>
-            <ProfileTopBar/>
-        </div>
-        <div className='ProfileInfo'>
-            <div className='ProfileContent'>
-                <h2> Profile Info </h2>
-                <div className='ProfileSide'>
-                    <div className='ProfilePart'>
-                        <p>City: {profileData.city}, {profileData.state} </p>
-                    </div>
-                    <div className='ProfilePart'>
-                        <p>Salary Range: {profileData.salary}</p>
-                    </div>
-                    <div className='ProfilePart'>
-                        <p>Roommates: {profileData.roommates}</p>
-                    </div>
-                </div>
-                <div className='ProfileSide'>
-                    <div className='ProfilePart'>
-                        <p>Children: {profileData.children}</p>
-                    </div>
-                    <div className='ProfilePart'>
-                        <p>Job: {profileData.jobs}</p>
-                    </div>
-                </div>
-                <button className='EditProfileBtn'>Edit Profile</button>
+        {loading ? (
+            <div className="LoadOverlay">
+            <Oval 
+            height="80" 
+            width="80" 
+            color="#4fa94d"
+            />
             </div>
-        </div>
-        <div className='TransactionInfo'>
-        <div className='TransactionContent'>
-                <h2>Transactions Info</h2>
-                <div className='TransactionsTitle'>
-                    <h3>Your Transactions Breakdown</h3>
-                </div>
-                <div className='ag-theme-alpine' style={{ height: 400, width: 800}}>
-                    <AgGridReact 
-                        rowData={rows}
-                        columnDefs={columnDefs}
-                        autoGroupColumnDef={autoGroupColumnDef}
-                        treeData={true}
-                        getDataPath={getDataPath}
-                        groupDefaultExpanded={0}
-                    />
-                </div>
-                <div className='TransactionsTitle'>
-                    <h3>Visualized Data</h3>
-                </div>
-                <div className='piePlotTitle'>
-                    <h4>Your Expenditure Breakdown</h4>
-                </div>
-                <div className='piePlot'> 
-                    <img src={pieSrc}/>
-                </div>
-                <div className='graphSelect'>
-                    <Select
-                        placeholder="Graph…"
-                        closeMenuOnSelect={true}
-                        components={animatedComponents}
-                        options={selectData}
-                        isClearable={true}
-                        className='graphSelector'
-                        isMulti
-                        onChange={handleSelectChange}
-                        value={selectedOptions}
-                    />
-                </div>
-                <div className='chart'>
-                    <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
+        ) : ( 
+        <>
+            <div className='TopBar'>
+                <ProfileTopBar/>
+            </div>
+            <div className='ProfileInfo'>
+                <div className='ProfileContent'>
+                    <h2> Profile Info </h2>
+                    <div className='ProfileSide'>
+                        <div className='ProfilePart'>
+                            <p>City: {profileData.city}, {profileData.state} </p>
+                        </div>
+                        <div className='ProfilePart'>
+                            <p>Salary Range: {profileData.salary}</p>
+                        </div>
+                        <div className='ProfilePart'>
+                            <p>Roommates: {profileData.roommates}</p>
+                        </div>
+                    </div>
+                    <div className='ProfileSide'>
+                        <div className='ProfilePart'>
+                            <p>Children: {profileData.children}</p>
+                        </div>
+                        <div className='ProfilePart'>
+                            <p>Job: {profileData.job}</p>
+                        </div>
+                    </div>
+                    <button className='EditProfileBtn' onClick={showModal}>Edit Profile</button>
                 </div>
             </div>
-        </div>
+            <div className='TransactionInfo'>
+            <div className='TransactionContent'>
+                    <h2>Transactions Info</h2>
+                    <div className='TransactionsTitle'>
+                        <h3>Your Transactions Breakdown</h3>
+                    </div>
+                    <div className='ag-theme-alpine' style={{ height: 400, width: 800}}>
+                        <AgGridReact 
+                            rowData={rows}
+                            columnDefs={columnDefs}
+                            autoGroupColumnDef={autoGroupColumnDef}
+                            treeData={true}
+                            getDataPath={getDataPath}
+                            groupDefaultExpanded={0}
+                        />
+                    </div>
+                    <div className='TransactionsTitle'>
+                        <h3>Visualized Data</h3>
+                    </div>
+                    <div className='piePlotTitle'>
+                        <h4>Your Expenditure Breakdown</h4>
+                    </div>
+                    <div className='piePlot'> 
+                        <img src={pieSrc}/>
+                    </div>
+                    <div className='graphSelect'>
+                        <Select
+                            placeholder="Graph…"
+                            closeMenuOnSelect={true}
+                            components={animatedComponents}
+                            options={selectData}
+                            isClearable={true}
+                            className='graphSelector'
+                            isMulti
+                            onChange={handleSelectChange}
+                            value={selectedOptions}
+                        />
+                    </div>
+                    <div className='chart'>
+                        <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
+                    </div>
+                </div>
+                <EditProfileModal view={showEditProfileModal} closeView={closeModal} profileData={profileData}/>
+            </div>
+            </>
+        )}
         </>
     );
 }
