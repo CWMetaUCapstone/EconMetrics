@@ -62,6 +62,8 @@ function Profile() {
         'roommates': 0
     })
 
+    const [clickedBoxDetails, setClickedBoxDetails] = useState({});
+
     const fetchData = async () => {
         try {
             const profile = await fetchProfile(userId);
@@ -130,6 +132,13 @@ function Profile() {
             setClickedUserDetails(clickedOnUser)
         }
     }, [clickedUserId])
+
+    useEffect(() => {
+
+        if(Object.keys(clickedBoxDetails).length > 0){
+            setClickedBoxDetails(clickedBoxDetails)
+        }
+    }, [clickedBoxDetails])
 
     useEffect(() => {
         if (selectedOptions.length > 0) {
@@ -282,6 +291,19 @@ function Profile() {
                 <div className='TimeChart'>
                     <TimeChart data={overTimeChartData} onSaveSvg={saveOverTimeSvgToLocalStorage}/>
                 </div>
+                <div className='ToolTip'>
+                    <h3>What is a box plot?</h3>
+                    {/* source: https://en.wikipedia.org/wiki/Box_plot */}
+                    <span className='ToolTipText'>
+                        A box plot is a method in descriptive statistics of displaying the spread of a set of numerical values in terms
+                        of quantiles. The height of the box itself represents the middle 50% of values, so 
+                        half the cumulative value of points in the plot will be within the box's area and the upper and lower quarters of 
+                        cumulative point value lay above and below the box respectively. The horizontal line within the box represents the median value
+                        for the data set. The two horizontal lines outside of the box represent are the minimum and maximum, or the threshold values past which data points
+                        are considered outliers. These lines are found using an equation that considers the intraquartile range (the height of the box) times 1.5 +/- the 75th or 25th percentiles respectively. 
+                        Lastly, the two vertical lines, or "whiskers" describe the spread of the 25th and 75th percentiles
+                    </span>
+                </div>
                 <div className='Checkboxes'>
                     <FormControlLabel
                         control={
@@ -305,12 +327,14 @@ function Profile() {
                     />
                 </div>
                 <div className='BoxPlot'>
-                    <CompBoxPlot userData={transactions} similarUserData={similarUsers} OnClickedUserId={setClickedUserId}
-                    onSaveSvg={saveBoxPlotSvgToLocalStorage}/>
+                    <CompBoxPlot 
+                    userData={transactions} similarUserData={similarUsers} OnClickedUserId={setClickedUserId}
+                    onSaveSvg={saveBoxPlotSvgToLocalStorage} showBoxPlots={boxPlotCheckbox} showUserData={yourStatsCheckbox}
+                    OnBoxClick={setClickedBoxDetails}/>
                 </div>
                 {
                 clickedUserId !== 0 ? (
-                    <div className='ClickedUserDetails'> 
+                    <div className='ClickedDetails'> 
                         <p>City: {clickedUserDetails.city}</p>
                         <p>Salary: {clickedUserDetails.salary}</p>
                         <p>Job: {clickedUserDetails.job}</p>
@@ -321,7 +345,23 @@ function Profile() {
                     <div></div>
                 )
                 }
+                {
+                    Object.keys(clickedBoxDetails).length > 0 ? (
+                        <div className='ClickedDetails'>
+                            <p>25th Percentile: {clickedBoxDetails.quantiles[0].toFixed(2)} </p>
+                            <p>Median: {clickedBoxDetails.quantiles[1].toFixed(2)}</p>
+                            <p>75th Percentile: {clickedBoxDetails.quantiles[2].toFixed(2)}</p>
+                            <p>Upper Outlier Range: {clickedBoxDetails.range[1].toFixed(2)}</p>
+                            <p>Lower Outlier Range: {clickedBoxDetails.range[0].toFixed(2)}</p>
+                        </div>
+                    ) : (
+                        <div></div>
+                    )
+
+                    
+                }
             </div>
+            
         </div>
         </>
     );

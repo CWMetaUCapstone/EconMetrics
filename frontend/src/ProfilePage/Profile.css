@@ -96,9 +96,9 @@ h4 {
     margin-left: 10%;
 }
 
-.ClickedUserDetails {
-    margin-left: 10%;
-    margin-top: 5%;
+.ClickedDetails {
+    margin-left: 5%;
+    margin-top: 2%;
     display: flex;
     gap: 2%;
 }
@@ -108,5 +108,49 @@ h4 {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 5%;
+}
+
+.ToolTip h3 {
+    margin-bottom: .5%;
+    width: 100%;
+    border-bottom: 1px dotted black;
+}
+
+.ToolTip {
+    position: relative;
+    display: inline-block;
+    margin-left: 5%;
+  }
+  
+.ToolTipText {
+    visibility: hidden;
+    width: 300%;
+    background-color: #47565f;
+    color: #f7f9fb;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10%;
+    position: absolute;
+    z-index: 1;
+    right: 110%;
+    margin-top: -1%;
+    opacity: 0;
+    transition: opacity 1s;
+    line-height: 1.5;
+}
+  
+  .ToolTip .ToolTipText::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent #47565f;
+  }
+
+.ToolTip:hover .ToolTipText {
+    visibility: visible;
+    opacity: 1;
 }
