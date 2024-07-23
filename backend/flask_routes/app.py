@@ -35,7 +35,7 @@ from data_handling.data_processing import aggregate_user_data
 from data_handling.data_maps import sum_category_map
 from data_handling.data_processing import create_pie_plot
 
-# Load environment variables
+# load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -70,6 +70,7 @@ class User(db.Model):
     job = db.Column(db.String(120), nullable=True)
     token = db.Column(db.String(120), nullable=True, unique=True) 
     transactions = relationship("Transactions", back_populates="user")
+    goals = relationship("Goals", secondary='user_goals', back_populates="users")
 
 class Transactions(db.Model):
     __tablename__ = 'Transactions'
@@ -118,6 +119,22 @@ class Transactions(db.Model):
     savings_account = db.Column(db.Numeric(13, 2), nullable=True)
     time = db.Column(db.DateTime, server_default=func.now())
     transaction_date = db.Column(db.Integer, nullable=True)
+
+class Goals(db.Model):
+    __tablename__ = 'Goals'
+    id = db.Column(db.Integer, primary_key=True)
+    users = relationship("User", secondary='user_goals', back_populates="goals")
+    category = db.Column(db.String)
+    value = db.Column(db.Integer)
+    createdAt = db.Column(db.DateTime, server_default=func.now())
+    deadline = db.Column(db.DateTime)
+
+# the user_goals table serves as an intermediary between users and goals to facilitate the many-to-many relationship
+user_goals = db.Table('user_goals',
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('User.id')),
+    db.Column('goal_id', db.Integer, db.ForeignKey('Goals.id'))
+)
 
 
 # Flask Routes
