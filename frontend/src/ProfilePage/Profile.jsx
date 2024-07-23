@@ -1,5 +1,5 @@
 import './Profile.css'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
@@ -14,6 +14,8 @@ import TimeChart from './Graphs/TimeChart'
 import CompBoxPlot from './Graphs/CompBoxPlot';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import EditProfileModal from './EditProfileModal';
+import { Oval } from 'react-loader-spinner'
 
 
 function Profile() {
@@ -26,6 +28,7 @@ function Profile() {
         'children':'',
         'job': '',
         'state': '',
+        'postal': '',
         'id': ''
     })
     const [similarUsers, setSimilarUsers] = useState([]);
@@ -41,10 +44,12 @@ function Profile() {
     ]);
 
     const [overTimeChartData, setOverTimeChartData] = useState([]);
-    const [selectData , setSelectData] = useState([]);
+    const [selectData, setSelectData] = useState([]);
     const [mostRecentTransId, setMostRecentTransId] = useState(0);
-    const [pieSrc , setPieSrc] = useState('');
+    const [pieSrc, setPieSrc] = useState('');
     const [selectedOptions, setSelectedOptions] = useState([]);
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     // over time chart is cached as a url so selected options persist on graph for refresh
     const [overTimeChartSVG, setOverTimeChartSVG] = useState('');
@@ -66,6 +71,7 @@ function Profile() {
 
     const fetchData = async () => {
         try {
+            setLoading(true)
             const profile = await fetchProfile(userId);
             setProfileData(profile);
             if (profile.city != '') {
@@ -77,10 +83,19 @@ function Profile() {
                 setTransaction(transData);
                 setSelectData(getSelectData(transData));
             }
+            setLoading(false)
         } catch (error) {
+            setLoading(false)
             console.error('Error fetching data:', error);
         }
     };
+
+    /* if modal view changes, 
+    it's likely that profile data changed so we need to fetch updated data for profile and similar users
+    */
+    useEffect(() => {
+        fetchData();
+    }, [showEditProfileModal])
 
     useEffect(() => {
         fetchData();
@@ -178,6 +193,15 @@ function Profile() {
         return data.category;
     }, []);
 
+    useEffect(() => {
+        if (selectedOptions.length > 0) {
+            getHistory(selectedOptions);
+        } else {
+            // clear chartData if there are no selected options
+            setChartData([]);
+        }
+    }, [selectedOptions]);
+    
     const getHistory = async (options) => {
         // Fetch historical data for all selected options
         const dataPromises = options.map(option =>
@@ -216,79 +240,97 @@ function Profile() {
         setBoxPlotCheckbox(prev => !prev);
     };
 
+    const showModal = () => {
+        setShowEditProfileModal(true)
+    };
+
+    const closeModal = () => {
+        setShowEditProfileModal(false)
+    };
+
     const handleYourStatsBoxChange = () => {
         setYourStatsCheckbox(prev => !prev)
     };
 
     return (
         <>
-        <div className='TopBar'>
-            <ProfileTopBar/>
-        </div>
-        <div className='ProfileInfo'>
-            <div className='ProfileContent'>
-                <h2> Profile Info </h2>
-                <div className='ProfileSide'>
-                    <div className='ProfilePart'>
-                        <p>City: {profileData.city}, {profileData.state} </p>
-                    </div>
-                    <div className='ProfilePart'>
-                        <p>Salary Range: {profileData.salary}</p>
-                    </div>
-                    <div className='ProfilePart'>
-                        <p>Roommates: {profileData.roommates}</p>
-                    </div>
-                </div>
-                <div className='ProfileSide'>
-                    <div className='ProfilePart'>
-                        <p>Children: {profileData.children}</p>
-                    </div>
-                    <div className='ProfilePart'>
-                        <p>Job: {profileData.jobs}</p>
-                    </div>
-                </div>
-                <button className='EditProfileBtn'>Edit Profile</button>
+            {loading ? (  
+                <div className="LoadOverlay">
+                <Oval 
+                height="80" 
+                width="80" 
+                color="#4fa94d"
+                />
             </div>
-        </div>
-        <div className='TransactionInfo'>
-        <div className='TransactionContent'>
-                <h2>Transactions Info</h2>
-                <div className='TransactionsTitle'>
-                    <h3>Your Transactions Breakdown</h3>
+            ) : (
+                    <>
+                     <div className='TopBar'>
+                <ProfileTopBar/>
+            </div>
+            <div className='ProfileInfo'>
+                <div className='ProfileContent'>
+                    <h2> Profile Info </h2>
+                    <div className='ProfileSide'>
+                        <div className='ProfilePart'>
+                            <p>City: {profileData.city}, {profileData.state} </p>
+                        </div>
+                        <div className='ProfilePart'>
+                            <p>Salary Range: {profileData.salary}</p>
+                        </div>
+                        <div className='ProfilePart'>
+                            <p>Roommates: {profileData.roommates}</p>
+                        </div>
+                    </div>
+                    <div className='ProfileSide'>
+                        <div className='ProfilePart'>
+                            <p>Children: {profileData.children}</p>
+                        </div>
+                        <div className='ProfilePart'>
+                            <p>Job: {profileData.job}</p>
+                        </div>
+                    </div>
+                    <button className='EditProfileBtn' onClick={showModal}>Edit Profile</button>
                 </div>
-                <div className='ag-theme-alpine' style={{ height: 400, width: 800}}>
-                    <AgGridReact 
-                        rowData={rows}
-                        columnDefs={columnDefs}
-                        autoGroupColumnDef={autoGroupColumnDef}
-                        treeData={true}
-                        getDataPath={getDataPath}
-                        groupDefaultExpanded={0}
-                    />
-                </div>
-                <div className='TransactionsTitle'>
-                    <h3>Visualized Data</h3>
-                </div>
-                <div className='piePlotTitle'>
-                    <h4>Your Expenditure Breakdown</h4>
-                </div>
-                <div className='piePlot'> 
-                    <img src={pieSrc}/>
-                </div>
-                <div className='graphSelect'>
-                    <Select
-                        placeholder="Graph…"
-                        closeMenuOnSelect={true}
-                        components={animatedComponents}
-                        options={selectData}
-                        isClearable={true}
-                        className='graphSelector'
-                        isMulti
-                        onChange={handleSelectChange}
-                        value={selectedOptions}
-                    />
-                </div>
-                <div className='TimeChart'>
+            </div>
+            <div className='TransactionInfo'>
+            <div className='TransactionContent'>
+                    <h2>Transactions Info</h2>
+                    <div className='TransactionsTitle'>
+                        <h3>Your Transactions Breakdown</h3>
+                    </div>
+                    <div className='ag-theme-alpine' style={{ height: 400, width: 800}}>
+                        <AgGridReact 
+                            rowData={rows}
+                            columnDefs={columnDefs}
+                            autoGroupColumnDef={autoGroupColumnDef}
+                            treeData={true}
+                            getDataPath={getDataPath}
+                            groupDefaultExpanded={0}
+                        />
+                    </div>
+                    <div className='TransactionsTitle'>
+                        <h3>Visualized Data</h3>
+                    </div>
+                    <div className='piePlotTitle'>
+                        <h4>Your Expenditure Breakdown</h4>
+                    </div>
+                    <div className='piePlot'> 
+                        <img src={pieSrc}/>
+                    </div>
+                    <div className='graphSelect'>
+                        <Select
+                            placeholder="Graph…"
+                            closeMenuOnSelect={true}
+                            components={animatedComponents}
+                            options={selectData}
+                            isClearable={true}
+                            className='graphSelector'
+                            isMulti
+                            onChange={handleSelectChange}
+                            value={selectedOptions}
+                        />
+                    </div>
+                    <div className='TimeChart'>
                     <TimeChart data={overTimeChartData} onSaveSvg={saveOverTimeSvgToLocalStorage}/>
                 </div>
                 <div className='ToolTip'>
@@ -363,8 +405,15 @@ function Profile() {
             </div>
             
         </div>
+                    </>
+
+            )}
         </>
-    );
+    
+    )
+
 }
+
+
 
 export default Profile;
