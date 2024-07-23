@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react';
-import chartConfig from '../../HelperFuncs/chartConfig.json'
-
+import chartConfig from '../../../HelperFuncs/chartConfig.json'
 import * as d3 from 'd3';
 
-
-const Chart = ({ data, onSaveSvg }) => {
+const TimeChart = ({ data, onSaveSvg }) => {
     const svgRef = useRef();
 
     useEffect(() => {
@@ -43,7 +41,7 @@ const Chart = ({ data, onSaveSvg }) => {
         })
         .y(d => yAxis(d.value));
 
-        // this adds the X axis to the svg
+        // this adds the x axis to the svg
         svg.append("g")
             .attr("transform", `translate(${margin.left}, ${height + margin.bottom})`)
             .call(d3.axisBottom(xAxis)
@@ -167,4 +165,4 @@ const Chart = ({ data, onSaveSvg }) => {
         <svg ref={svgRef} />
         );
     };
-    export default Chart;
+    export default TimeChart;

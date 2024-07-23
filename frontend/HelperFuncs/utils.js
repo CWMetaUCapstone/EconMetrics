@@ -165,9 +165,9 @@ export const getRows = (transactions, similarUsers) => {
             let average = 'N/A'
             let difference = 'N/A'
             // filter to ensure that similarUsers has at least one field for the category
-            const similarUsersForCategory = similarUsers.filter((user) => user[category]);
+            const similarUsersForCategory = similarUsers.filter((user) => user.transaction && user.transaction[category]);
             if (similarUsersForCategory.length > 0) {
-                const medianValues = similarUsersForCategory.map((user) => user[category].total_percent);
+                const medianValues = similarUsersForCategory.map((user) => user.transaction[category].total_percent);
                 const medianValue = median(medianValues);
                 average = Math.round(medianValue * 100) / 100;
                 difference = Math.round((roundedTotalPercent - average) * 100) / 100;
@@ -188,7 +188,7 @@ export const getRows = (transactions, similarUsers) => {
                 relevant field name. If found, extract percent, otherwise null
                 */
                 const detailPercentages = similarUsersForCategory.map((user) => {
-                    const userDetail = user[category].details.find(detailItem => detailItem.name === detail.name);
+                    const userDetail = user.transaction[category].details.find(detailItem => detailItem.name === detail.name);
                     return userDetail ? userDetail.percent : null;
                 });
                   // check to make sure we actually have data to take the median of, if not we have the default 'N/A'

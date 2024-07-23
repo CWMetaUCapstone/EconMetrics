@@ -10,7 +10,10 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import Chart from './Chart';
+import TimeChart from './Graphs/TimeChart'
+import CompBoxPlot from './Graphs/CompBoxPlot';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import EditProfileModal from './EditProfileModal';
 import { Oval } from 'react-loader-spinner'
 
@@ -40,7 +43,7 @@ function Profile() {
         { field: "difference", headerName: "Difference Between You and Similar Average" }
     ]);
 
-    const [chartData, setChartData] = useState([]);
+    const [overTimeChartData, setOverTimeChartData] = useState([]);
     const [selectData, setSelectData] = useState([]);
     const [mostRecentTransId, setMostRecentTransId] = useState(0);
     const [pieSrc, setPieSrc] = useState('');
@@ -48,8 +51,23 @@ function Profile() {
     const [showEditProfileModal, setShowEditProfileModal] = useState(false)
     const [loading, setLoading] = useState(false)
 
-    // chart is cached as a url so selected options persist on graph for refresh
-    const [chartSVG, setChartSVG] = useState('');
+    // over time chart is cached as a url so selected options persist on graph for refresh
+    const [overTimeChartSVG, setOverTimeChartSVG] = useState('');
+    const [boxPlotSVG, setBoxPlotSVG] = useState('');
+
+    const [yourStatsCheckbox, setYourStatsCheckbox] = useState(false);
+    const [boxPlotCheckbox, setBoxPlotCheckbox] = useState(false);
+
+    const [clickedUserId, setClickedUserId] = useState(0)
+    const [clickedUserDetails, setClickedUserDetails] = useState({
+        'city': '',
+        'salary': '',
+        'job': '',
+        'children': 0,
+        'roommates': 0
+    })
+
+    const [clickedBoxDetails, setClickedBoxDetails] = useState({});
 
     const fetchData = async () => {
         try {
@@ -99,15 +117,62 @@ function Profile() {
     useEffect(() => {
         // retrieve and set svg src and selected options from localStorage if there's data saved
         const savedOptions = localStorage.getItem('selectedOptions');
-        const savedSVG = localStorage.getItem('chartSVG');
+        const savedOverTimeSVG = localStorage.getItem('overTimeSVG');
+        const savedBoxPlotSVG = localStorage.getItem('boxPlotSVG')
+        const storedYourStatsCheckbox = localStorage.getItem('yourStatsCheckbox');
+        const storedBoxPlotCheckbox = localStorage.getItem('boxPlotCheckbox');
+        if (storedBoxPlotCheckbox) {
+            // boolean data is stored as a string in local storage so we convert back to bool
+            setBoxPlotCheckbox(storedBoxPlotCheckbox === 'true');
+        }
+        if (storedYourStatsCheckbox) {
+            setYourStatsCheckbox(storedYourStatsCheckbox === 'true')
+        }
         if (savedOptions) {
             setSelectedOptions(JSON.parse(savedOptions));
         }
-        if (savedSVG) {
-            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedSVG)))}`;
-            setChartSVG(imgSrc);
+        if (savedBoxPlotSVG) {
+            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedBoxPlotSVG)))}`;
+            setBoxPlotSVG(imgSrc);
+        }
+        if (savedOverTimeSVG) {
+            const imgSrc = `data:image/svg+xml;base64,${btoa((encodeURIComponent(savedOverTimeSVG)))}`;
+            setOverTimeChartSVG(imgSrc);
         }
     }, []);
+
+    useEffect(() => {
+        if(clickedUserId != 0){
+            const clickedOnUser = similarUsers.filter(users => users.id === clickedUserId)[0]
+            setClickedUserDetails(clickedOnUser)
+        }
+    }, [clickedUserId])
+
+    useEffect(() => {
+
+        if(Object.keys(clickedBoxDetails).length > 0){
+            setClickedBoxDetails(clickedBoxDetails)
+        }
+    }, [clickedBoxDetails])
+
+    useEffect(() => {
+        if (selectedOptions.length > 0) {
+            getHistory(selectedOptions);
+        } else {
+            // clear chartData if there are no selected options
+            setOverTimeChartData([]);
+        }
+    }, [selectedOptions]);
+
+    useEffect(() => {
+        const boxDataString = boxPlotCheckbox.toString();
+        localStorage.setItem('boxPlotCheckbox', boxDataString);
+    }, [boxPlotCheckbox]);
+
+    useEffect(() => {
+        const yourStatsDataString = yourStatsCheckbox.toString();
+        localStorage.setItem('yourStatsCheckbox', yourStatsDataString);
+    }, [yourStatsCheckbox])
     
     // this helper sets "Category" to be the column rows are grouped under 
     const autoGroupColumnDef = useMemo(() => {
@@ -118,6 +183,7 @@ function Profile() {
           },
         };
       }, []);
+    
     
     /*
     this function sets the path that row data is grouped by to be the category field of row elements
@@ -143,7 +209,7 @@ function Profile() {
         );
         const results = await Promise.all(dataPromises);
         const combinedData = results.flat();
-        setChartData(combinedData); 
+        setOverTimeChartData(combinedData);
     };
 
     const animatedComponents = makeAnimated(); 
@@ -157,11 +223,21 @@ function Profile() {
         localStorage.setItem('selectedOptions', JSON.stringify(options));
     };
 
-    const saveSvgToLocalStorage = (svgElement) => {
+    const saveOverTimeSvgToLocalStorage = (svgElement) => {
         // svg is saved in local storage as a src url
-        const svgData = new XMLSerializer().serializeToString(svgElement);
-        localStorage.setItem('chartSVG', svgData);
-        setChartSVG(svgData);
+        const overTimeSVGData = new XMLSerializer().serializeToString(svgElement);
+        localStorage.setItem('overTimeSVG', overTimeSVGData);
+        setOverTimeChartSVG(overTimeSVGData);
+    };
+
+    const saveBoxPlotSvgToLocalStorage = (svgElement) => {
+        const boxSVGData = new XMLSerializer().serializeToString(svgElement)
+        localStorage.setItem('boxPlotSVG', boxSVGData)
+        setBoxPlotSVG(boxSVGData)
+    };
+
+    const handleBoxPlotChange = () => {
+        setBoxPlotCheckbox(prev => !prev);
     };
 
     const showModal = () => {
@@ -172,19 +248,23 @@ function Profile() {
         setShowEditProfileModal(false)
     };
 
+    const handleYourStatsBoxChange = () => {
+        setYourStatsCheckbox(prev => !prev)
+    };
+
     return (
         <>
-        {loading ? (
-            <div className="LoadOverlay">
-            <Oval 
-            height="80" 
-            width="80" 
-            color="#4fa94d"
-            />
+            {loading ? (  
+                <div className="LoadOverlay">
+                <Oval 
+                height="80" 
+                width="80" 
+                color="#4fa94d"
+                />
             </div>
-        ) : ( 
-        <>
-            <div className='TopBar'>
+            ) : (
+                    <>
+                     <div className='TopBar'>
                 <ProfileTopBar/>
             </div>
             <div className='ProfileInfo'>
@@ -250,16 +330,90 @@ function Profile() {
                             value={selectedOptions}
                         />
                     </div>
-                    <div className='chart'>
-                        <Chart data={chartData} onSaveSvg={saveSvgToLocalStorage}/>
-                    </div>
+                    <div className='TimeChart'>
+                    <TimeChart data={overTimeChartData} onSaveSvg={saveOverTimeSvgToLocalStorage}/>
                 </div>
-                <EditProfileModal view={showEditProfileModal} closeView={closeModal} profileData={profileData}/>
+                <div className='ToolTip'>
+                    <h3>What is a box plot?</h3>
+                    {/* source: https://en.wikipedia.org/wiki/Box_plot */}
+                    <span className='ToolTipText'>
+                        A box plot is a method in descriptive statistics of displaying the spread of a set of numerical values in terms
+                        of quantiles. The height of the box itself represents the middle 50% of values, so 
+                        half the cumulative value of points in the plot will be within the box's area and the upper and lower quarters of 
+                        cumulative point value lay above and below the box respectively. The horizontal line within the box represents the median value
+                        for the data set. The two horizontal lines outside of the box represent are the minimum and maximum, or the threshold values past which data points
+                        are considered outliers. These lines are found using an equation that considers the intraquartile range (the height of the box) times 1.5 +/- the 75th or 25th percentiles respectively. 
+                        Lastly, the two vertical lines, or "whiskers" describe the spread of the 25th and 75th percentiles
+                    </span>
+                </div>
+                <div className='Checkboxes'>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                color='success'
+                                checked={yourStatsCheckbox}
+                                onChange={handleYourStatsBoxChange}
+                            />
+                        }
+                        label="Show Your Stats"
+                    />
+                  <FormControlLabel
+                        control={
+                            <Checkbox
+                                color='success'
+                                checked={boxPlotCheckbox}
+                                onClick={handleBoxPlotChange}
+                            />
+                        }
+                        label="Show Box Plots"
+                    />
+                </div>
+                <div className='BoxPlot'>
+                    <CompBoxPlot 
+                    userData={transactions} similarUserData={similarUsers} OnClickedUserId={setClickedUserId}
+                    onSaveSvg={saveBoxPlotSvgToLocalStorage} showBoxPlots={boxPlotCheckbox} showUserData={yourStatsCheckbox}
+                    OnBoxClick={setClickedBoxDetails}/>
+                </div>
+                {
+                clickedUserId !== 0 ? (
+                    <div className='ClickedDetails'> 
+                        <p>City: {clickedUserDetails.city}</p>
+                        <p>Salary: {clickedUserDetails.salary}</p>
+                        <p>Job: {clickedUserDetails.job}</p>
+                        <p>Children: {clickedUserDetails.children}</p>
+                        <p>Roomamtes: {clickedUserDetails.roommates}</p>
+                    </div>
+                ) : (
+                    <div></div>
+                )
+                }
+                {
+                    Object.keys(clickedBoxDetails).length > 0 ? (
+                        <div className='ClickedDetails'>
+                            <p>25th Percentile: {clickedBoxDetails.quantiles[0].toFixed(2)} </p>
+                            <p>Median: {clickedBoxDetails.quantiles[1].toFixed(2)}</p>
+                            <p>75th Percentile: {clickedBoxDetails.quantiles[2].toFixed(2)}</p>
+                            <p>Upper Outlier Range: {clickedBoxDetails.range[1].toFixed(2)}</p>
+                            <p>Lower Outlier Range: {clickedBoxDetails.range[0].toFixed(2)}</p>
+                        </div>
+                    ) : (
+                        <div></div>
+                    )
+
+                    
+                }
             </div>
-            </>
-        )}
+            
+        </div>
+                    </>
+
+            )}
         </>
-    );
+    
+    )
+
 }
+
+
 
 export default Profile;

@@ -425,7 +425,7 @@ def find_similar_users(profileData):
     for user in users:
         # get each relevant users most recent transaction
         transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
-        results.append(transaction_to_json(transaction))
+        results.append(user_to_json(user, transaction))
     return results
 
   
@@ -538,7 +538,21 @@ def historical_trans_json(selectedOption, transactions):
         # interpret null entries as 0%
         percent_value = getattr(transaction, selectedOption) or 0
         result.append({'value': float(percent_value), 'date': transaction.transaction_date, 'name': selectedOption})
+    return result
 
+
+"""
+helper function to create objects out of users including an object for transactions
+"""
+def user_to_json(user, transaction):
+    result = {}
+    result['id'] = user.id
+    result['city'] = user.city + ', ' + user.state
+    result['salary'] = user.salary
+    result['job'] = user.job
+    result['roommates'] = user.roommates
+    result['children'] = user.children
+    result['transaction'] = transaction_to_json(transaction)
     return result
 
 

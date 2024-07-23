@@ -10,5 +10,7 @@
         },
     "dot_radius": 2.5, 
     "font_size": 12,
-    "font-family":  "Inter Tight"
+    "font-family":  "Inter Tight",
+    "scatter-range": 50,
+    "box-width-factor": 0.6
 }
