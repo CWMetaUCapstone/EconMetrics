@@ -281,7 +281,7 @@ helper function to format the rows of the AG-Grid component on search pages
 */
 export function getSearchRows(userData) {
     let rows = [];
-    for (let i =0 ; i < userData.length ; i++){
+    for (let i=0 ; i < userData.length ; i++){
         const user = userData[i]
         let transactionRows = [];
         const transactions = user.transaction
@@ -400,11 +400,81 @@ returns the ID for the most recent transaction associated with [userId]
 */
 export const fetchLatestTransID = async(userId) => {
     const response = await fetch(`http://localhost:3000/transId/${userId}`, 
-    { method: 'GET' })
+        { method: 'GET' })
     if(!response.ok){
         throw new Error('Network response was not ok at fetchLatestTransId', Error);
     }
     // endpoints cannot return ints so we have to convert int -> string -> int
     const data = await response.text();
     return  parseInt(data, 10);
+}
+
+/*
+helper function to return the list of goals associated with the user @ [userId]
+*/
+export const fetchActiveGoals = async(userId) => {
+    const response = await fetch(`http://localhost:3000/activegoals/${userId}`,
+        { method: 'GET' })
+    if(!response.ok){
+        throw new Error('Network response was not ok at fetchActiveGoals', Error);
+    }
+    const data = await response.json();
+    return data;
+}
+
+
+/* 
+analyzes a users transaction data to add to the database of goals by finding high-level generic goals
+that may apply to many users so there are goals to track as soon as a user enters the goal page
+*/
+export const findGenericGoals = async(transactionData) => {
+    // goals are always set at the sub category level so we can filter out data pertaining to categories as a whole
+    const subfieldTransactions = transactionData.filter(dataRow => dataRow.category.length === 2)
+    let goals = []
+    for(let i = 0; i < subfieldTransactions.length ; i++){
+        let transaction = subfieldTransactions[i]
+        if(transaction.category[1] === 'savings_account' || transaction.category[1] === 'investement'){
+            // for investment categories, a negative difference is bad as it indicates we're saving less than average
+            if(transaction.difference < 0){
+                if(transaction.difference < -5){
+                    // if difference exceeds 5%, goal amount is 5%
+                    goals.push({
+                        'category': transaction.category[1],
+                        'value': -5
+                    })
+                } else{
+                    // otherwise the value becomes the floor rounded difference since we're dealing with negative values
+                    goals.push({
+                        'category': transaction.category[1],
+                        'value': -Math.floor(transaction.difference)
+                    })
+                }
+            }
+        } else {
+            if(transaction.difference > 0){
+                // logic for other categories is reversed from savings/investment
+                if(transaction.difference > 5){
+                    goals.push({
+                        'category': transaction.category[1],
+                        'value': 5
+                    })
+                } else{
+                    goals.push({
+                        'category': transaction.category[1],
+                        'value': Math.ceil(transaction.difference)
+                    })
+                }
+            }
+        }
+        const response = await fetch('http://localhost:3000/creategoals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(goals),
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok at fetchSimilarUsers', Error);
+        }
+    }
+
+
 }
