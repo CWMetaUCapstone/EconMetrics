@@ -81,7 +81,6 @@ model Goals {
   id        Int     @id @default(autoincrement())
   users     User[] // array of users that have signed up for this goal
   category  String // the category this goal is for ex. legal_services
-  value     Int // the percent this goal is targeting users to raise/lower their spending positive values represent raising values (only for investment_and_saving), otherwise value is negative
+  target     Int // the percent this goal is targeting users to raise/lower their spending positive values represent raising values (only for investment_and_saving), otherwise value is negative
   createdAt DateTime @default(now())
-  deadline  DateTime // these two columns are used to track the time left in a challenge
 }
