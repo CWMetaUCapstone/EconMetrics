@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import chartConfig from '../../../HelperFuncs/chartConfig.json'
 import * as d3 from 'd3';
 
-function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
+function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg, showBoxPlots, showUserData, OnBoxClick}) {
     const svgRef = useRef();
 
     useEffect(() => {
@@ -13,8 +13,8 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
         d3.select(svgRef.current).selectAll("*").remove();
 
         const svg = d3.select(svgRef.current)
-            .attr("width", width + margin.left + margin.right + 200)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("width", width + margin.left + margin.right + chartConfig.width/3)
+            .attr("height", height + margin.top + margin.bottom + margin.top)
 
         /* 
         [categories] defines the list of ticks / groups on the xAxis, this logic ensures that all ticks 
@@ -67,7 +67,8 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
             category, 
             entries, 
             quantiles: [bottomQuantile, medianQuantile, topQuantile],
-            range: [bottomOutlierRange, topQuantileRange]
+            range: [bottomOutlierRange, topQuantileRange],
+            userData: [userData]
            }
           });
         
@@ -81,16 +82,22 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
 
         const xAxis = d3.scaleBand()
             .domain(categories)
-            .range([margin.left, chartConfig.width + margin.right + margin.left + margin.bottom])
-            .paddingInner(2)
+            .range([margin.left, width - margin.right])
+            .paddingInner(1)
             .paddingOuter(0.5);
-
+        
+        /* 
+        xAxis bandwidth isn't being properly calculated (I assume because of the list of strings for domain)
+        so this is a manual computation in place of [xAxis.bandwidth()]
+        */
+        const bandwidth = (width - margin.left - margin.right) / categories.length;
+        
         const yAxis = d3.scaleLinear()
             .domain([0, 100])
             .range([chartConfig.height, 0]);
         
         svg.append("g")
-            .attr("transform", `translate(${margin.left}, ${height + margin.bottom})`)
+            .attr("transform", `translate(${margin.left}, ${height + margin.bottom + margin.top})`)
             .call(d3.axisBottom(xAxis));
 
         svg.append("g")
@@ -112,7 +119,59 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
             .attr("class", "category")
             .attr("transform", d => `translate(${xAxis(d.category)}, 0)`)
 
-        categoryGroups.selectAll("circle.point")
+        // conditionally append box plots based on user input through the corresponding checkbox
+        if(showBoxPlots){
+            // the placement of this if statement in the program allows dots to be placed on top of the box so their mouse effects can still be reached
+            const boxWidth = chartConfig['scatter-range'] - chartConfig['scatter-range'] / 2 + margin.left;
+            const boxOffset = (bandwidth - boxWidth) / 2;
+
+            const boxPlots = categoryGroups.selectAll("rect.box-plot")
+                .data(d => [d])
+                .join("g")
+                    .attr("transform", `translate(${boxOffset}, 0)`)
+            
+            boxPlots.append("rect")
+                .attr("class", "box-plot")
+                .attr("y", d => yAxis(d.quantiles[2]))
+                .attr("height", d => yAxis(d.quantiles[0]) - yAxis(d.quantiles[2]))
+                .attr("width", boxWidth)
+                .attr("fill", "#ddd")
+                .attr("opacity", 0.6)
+
+            boxPlots.append("line")
+                .attr("class", "whisker")
+                .attr("y1", d => yAxis(d.range[1]))
+                .attr("y2", d => yAxis(d.range[0]))
+                .attr("x1", (bandwidth - (bandwidth * chartConfig['box-width-factor']))/2 + chartConfig['scatter-range']/2)
+                .attr("x2", (bandwidth - (bandwidth * chartConfig['box-width-factor']))/2 + chartConfig['scatter-range']/2)
+                .attr("stroke", "black")
+            
+            boxPlots.append("line")
+                .attr("class", "median")
+                .attr("y1", d => yAxis(d.quantiles[1]))
+                .attr("y2", d => yAxis(d.quantiles[1]))
+                .attr("x1", 0)
+                .attr("x2", boxWidth)
+                .attr("stroke", "black")
+
+            boxPlots.append("line")
+                .attr("class", "cap")
+                .attr("y1", d => yAxis(d.range[1]))
+                .attr("y2", d => yAxis(d.range[1]))
+                .attr("x1", boxWidth * .2)
+                .attr("x2", boxWidth * .8)
+                .attr("stroke", "black")
+
+            boxPlots.append("line")
+                .attr("class", "cap")
+                .attr("y1", d => yAxis(d.range[0]))
+                .attr("y2", d => yAxis(d.range[0]))
+                .attr("x1", boxWidth * .2)
+                .attr("x2", boxWidth * .8)
+                .attr("stroke", "black")  
+        }
+
+        const similarDots = categoryGroups.selectAll("circle.point")
           .data(d => d.entries)
           .join("circle")
             .attr("class", "point")
@@ -123,6 +182,38 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
             .attr("r", chartConfig.dot_radius * 1.5) 
             .attr("data-category", d => d.category)
             .attr("data-user-id", d => d.id)
+
+        /* 
+        if [showUserData] is enabled, plot the data for user whose profile we're on, 
+        highlight these points by graying out other dots and disabling their pointer effects
+        */
+        if(showUserData){
+
+            categoryGroups.selectAll("circle.user-point")
+            /* 
+            because userData field in [categoryValues] is passed as the direct userData object, 
+            categories are not seperated in the same way as in entries 
+            so we need to map out each category to get the category name and associated percent
+            */
+            .data(d => {
+                return d.userData.map(user => ({
+                    total_percent: user[d.category].total_percent,
+                    category: d.category
+                }));
+            })
+            .join("circle")
+                .attr("class", "user-point")
+                .attr("cx", () => Math.random() * chartConfig['scatter-range'] - chartConfig['scatter-range'] / 2 + margin.left)
+                .attr("cy", d => yAxis(d.total_percent))
+                .attr("fill", "steelblue")
+                .attr("r", chartConfig.dot_radius * 2) 
+                .attr("data-category", d => d.category)
+            
+            similarDots
+                .attr("fill", "#ddd")
+                .style("pointer-events", "none")
+                
+        }
 
         // if the user hovers over a dot, all dots corresponding to the user associated with that dot are highlighted
         svg.on("mouseover", (event) => {
@@ -146,19 +237,28 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg}) {
                 OnClickedUserId(userId)
             })
 
-        // user's can reset the click state by clicking on the graph itself (not a circle)
+        // users can reset the click state by clicking on the graph itself (not a circle or box)
         svg.on("click", (event) => {
             const target = event.target
             if(target.className.baseVal !== 'point'){
                 OnClickedUserId(0)
             }
+            if(target.className.baseVal !== 'box-plot'){
+                OnBoxClick({})
+            }
+
         })
+
+        svg.selectAll("rect.box-plot")
+            .on("click", (event, d) => {
+                OnBoxClick(d)
+            })
 
         if (onSaveSvg && svgRef.current) {
             onSaveSvg(svgRef.current);
         } 
 
-    }, [similarUserData, userData])
+    }, [similarUserData, userData, showBoxPlots, showUserData])
     return (
         <svg ref={svgRef} />
         );
