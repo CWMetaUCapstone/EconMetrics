@@ -198,7 +198,7 @@ function Profile() {
             getHistory(selectedOptions);
         } else {
             // clear chartData if there are no selected options
-            setChartData([]);
+            setOverTimeChartData([]);
         }
     }, [selectedOptions]);
     
@@ -374,6 +374,7 @@ function Profile() {
                     onSaveSvg={saveBoxPlotSvgToLocalStorage} showBoxPlots={boxPlotCheckbox} showUserData={yourStatsCheckbox}
                     OnBoxClick={setClickedBoxDetails}/>
                 </div>
+                <EditProfileModal view={showEditProfileModal} closeView={closeModal} profileData={profileData}/>
                 {
                 clickedUserId !== 0 ? (
                     <div className='ClickedDetails'> 
@@ -399,8 +400,6 @@ function Profile() {
                     ) : (
                         <div></div>
                     )
-
-                    
                 }
             </div>
             
