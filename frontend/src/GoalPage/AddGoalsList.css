@@ -4,9 +4,9 @@
     flex-direction: column;
     width: 80%;
     background-color: #36454f;
-    padding: 1%;
+    padding: 2.5%;
     overflow-y: scroll;
-    height: 50vh;
+    height: 60vh;
 }
 
 .AddGoalsList > div:nth-child(odd) {

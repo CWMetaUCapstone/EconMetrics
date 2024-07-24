@@ -470,13 +470,13 @@ function findInvestmentGoals(transaction) {
             // if difference exceeds 5%, goal amount is 5%
             return({
                 'category': transaction.category[1],
-                'target': -5
+                'target': 5
             })
         } else{
             // otherwise the value becomes the floor rounded difference since we're dealing with negative values
             return({
                 'category': transaction.category[1],
-                'target': -Math.floor(transaction.difference)
+                'target': Math.floor(transaction.difference) * -1
             })
         }
     }
