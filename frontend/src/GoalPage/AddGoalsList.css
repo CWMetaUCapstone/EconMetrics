@@ -1,0 +1,35 @@
+.AddGoalsList {
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    background-color: #36454f;
+    padding: 1%;
+    overflow-y: scroll;
+    height: 50vh;
+}
+
+.AddGoalsList > div:nth-child(odd) {
+    background-color: #536878;
+}
+
+.AddGoalsList > div:nth-child(odd) .AddButton {
+    background-color: #6aaa2b;
+}
+
+.AddGoalsList > div:nth-child(odd) .AddButton:hover {
+    background-color: #488819;
+}
+
+.AddGoalsList > div:nth-child(even) {
+    background-color: #405060; 
+}
+
+.AddGoalsList > div:nth-child(even) .AddButton {
+    background-color: #47894b;
+}
+
+.AddGoalsList > div:nth-child(even) .AddButton:hover {
+    background-color: #256729;
+}
+

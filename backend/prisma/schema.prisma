@@ -14,47 +14,47 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  password String
-  city     String?
-  postal   String?
-  state    String?
-  salary   String?
-  roommates Int?
-  children  Int?
-  job      String?
-  token    String?  @unique // the user's associated plaid access_token 
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  password     String
+  city         String?
+  postal       String?
+  state        String?
+  salary       String?
+  roommates    Int?
+  children     Int?
+  job          String?
+  token        String?        @unique // the user's associated plaid access_token 
   transactions Transactions[] // array of associated transactions
-  goals     Goals[] // array of goals the user signed up for
+  goals        Goals[] // array of goals the user signed up for
 }
 
 model Transactions {
-  id                    Int     @id @default(autoincrement())
-  user                  User    @relation(fields: [userId], references: [id])
-  userId                Int     // id of the corresponding user
-  rent                  Float?  // decimal type specifies number of digits before and after decimal point, resolving floating point money issues
-  utilities             Float?  // if reading from prisma utilities is the sum of a few categories (internet, garbage, water, heat, electric, other)
-  housing               Float?  // housing is sum of rent + utilities
-  loans                 Float?  // similar to housing, this value is the sum of more specific loan variants
+  id                    Int      @id @default(autoincrement())
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                Int // id of the corresponding user
+  rent                  Float? // decimal type specifies number of digits before and after decimal point, resolving floating point money issues
+  utilities             Float? // if reading from prisma utilities is the sum of a few categories (internet, garbage, water, heat, electric, other)
+  housing               Float? // housing is sum of rent + utilities
+  loans                 Float? // similar to housing, this value is the sum of more specific loan variants
   student_loans         Float?
   car_loans_and_lease   Float?
   credit_card_payments  Float?
-  other_loans           Float?  // this could be expanded to match more plaid categories like mortgage and personal loans but for simplicity those are grouped into other
-  entertainment         Float?  // sum category value like housing and loans
-  streaming_services    Float?  // sum of movie/tv and music streaming and other music purchases
-  other_entertainment   Float?  // sum of video games, tickets, and other from plaid
-  food                  Float?  // category sum
+  other_loans           Float? // this could be expanded to match more plaid categories like mortgage and personal loans but for simplicity those are grouped into other
+  entertainment         Float? // sum category value like housing and loans
+  streaming_services    Float? // sum of movie/tv and music streaming and other music purchases
+  other_entertainment   Float? // sum of video games, tickets, and other from plaid
+  food                  Float? // category sum
   restaurants           Float?
   groceries             Float?
-  medical_care          Float?  // this is an entire category that could be made much more specific
-  transportation        Float?  // category sum
+  medical_care          Float? // this is an entire category that could be made much more specific
+  transportation        Float? // category sum
   gas                   Float?
   parking               Float?
   ride_share            Float?
   public_transit        Float?
   other_transportation  Float?
-  merchandise           Float?  // category sum
+  merchandise           Float? // category sum
   retail                Float?
   apparel               Float?
   e_commerce            Float?
@@ -62,25 +62,26 @@ model Transactions {
   pet_supplies          Float?
   super_stores          Float?
   other_merchandise     Float?
-  other_expenses        Float?  // this is a catch-all category sum for specific detailed fields that I think are worth tracking but not large enough to stand alone
+  other_expenses        Float? // this is a catch-all category sum for specific detailed fields that I think are worth tracking but not large enough to stand alone
   gym_membership        Float?
   financial_planning    Float?
   legal_services        Float?
-  insurance             Float?  // auto, home, or healthcare
-  tax_payments          Float?  // income or property
-  travel                Float?  // similar to medical this is a catch-all standalone category
+  insurance             Float? // auto, home, or healthcare
+  tax_payments          Float? // income or property
+  travel                Float? // similar to medical this is a catch-all standalone category
   investment_and_saving Float?
   investment            Float?
   savings_account       Float?
   time                  DateTime @default(now()) // column to store the timestamp at which a trasaction was logged so we can fetch most recent
-  @@index([time])
   transaction_date      Int? // this stores a basic int to test over time, entered manually
+
+  @@index([time])
 }
 
 model Goals {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   users     User[] // array of users that have signed up for this goal
   category  String // the category this goal is for ex. legal_services
-  value     Int // the percent this goal is targeting users to raise/lower their spending positive values represent raising values (only for investment_and_saving), otherwise value is negative
+  target    Int // the percent this goal is targeting users to raise/lower their spending positive values represent raising values (only for investment_and_saving), otherwise value is negative
   createdAt DateTime @default(now())
 }

@@ -1,10 +1,19 @@
 import './AddGoalsList.css'
+import AddableGoal from './AddableGoal';
 
-function AddGoals() {
+function AddGoalsList( {goals, setActiveGoals} ) {
     return( 
-        <>
-        </>
+        <div className='AddGoalsList'>
+            {goals.map(goal => (
+                <AddableGoal
+                    goal = {goal}
+                    setActiveGoals= {setActiveGoals}
+                />
+            ))}
+
+        </div>
     )
 }
 
-export default AddGoals;
+export default AddGoalsList;
+

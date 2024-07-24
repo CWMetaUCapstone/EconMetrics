@@ -1,0 +1,31 @@
+.Goal {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    height: 6vh;
+}
+
+.AddButton {
+    color: #f7f9fb;
+    flex: 0 0 auto;
+    width: 5vw;
+    cursor: pointer;
+    border-radius: 0;
+    font-size: 12pt;
+}
+
+.GoalName {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.Goal h3 {
+    font-family: "Inter Tight", sans-serif;
+    font-weight: 400;
+    color: #f7f9fb;
+    margin: 0;
+    justify-content: center;
+}

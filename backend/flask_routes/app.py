@@ -16,8 +16,6 @@ from cryptography.fernet import Fernet
 from sqlalchemy import or_
 from sqlalchemy import and_
 import re
-from datetime import datetime, timedelta
-
 
 # Plaid imports
 from plaid.api import plaid_api
@@ -127,14 +125,14 @@ class Goals(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     users = relationship("User", secondary='user_goals', back_populates="goals")
     category = db.Column(db.String)
-    value = db.Column(db.Integer)
+    target = db.Column(db.Integer)
     createdAt = db.Column(db.DateTime, server_default=func.now())
 
 # the user_goals table serves as an intermediary between users and goals to facilitate the many-to-many relationship
 user_goals = db.Table('user_goals',
     db.Column('id', db.Integer, primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('User.id')),
-    db.Column('goal_id', db.Integer, db.ForeignKey('Goals.id'))
+    db.Column('goal_id', db.Integer, db.ForeignKey('Goals.id')),
 )
 
 
@@ -215,7 +213,7 @@ def create_link_token(userId):
             client_name="EconMetrics",
             country_codes=[CountryCode("US")],
             language='en',
-            # tokens are associated with indiviual users and therefore each user makes a unique request to plaid for link
+            # tokens are associated with individual users and therefore each user makes a unique request to plaid for link
             user=LinkTokenCreateRequestUser(
                 client_user_id=userId
             )
@@ -264,9 +262,9 @@ def transactions_sync(userId):
         request = TransactionsSyncRequest(access_token=decrypted_token)
         transactions = plaid_client.transactions_sync(request)
         # transaction object is by default non-serialable hence why we transform it to a dictionary
-        transactions_data = {
-            "transactions": [transaction.to_dict() for transaction in transactions.added]
-        }
+        transactions_data = {"transactions": []}
+        for transaction in transactions.added:
+            transactions_data["transactions"].append(transaction.to_dict())
         clean_data = clean_transaction_data(transactions_data)
         user_transaction_data = aggregate_user_data(clean_data)
         db_status = save_transaction(userId, user_transaction_data)
@@ -352,6 +350,8 @@ def get_similar_users():
 @app.route('/transId/<userId>', methods=['GET'])
 def get_latest_trans_id(userId):
     user = User.query.get(userId)
+    print(userId)
+    print(type(userId))
     transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
     # return type at an endpoint cannot be int so id is cast to string 
     return str(transaction.id)
@@ -373,7 +373,7 @@ def get_active_user_goals(userId):
         goal_data = {
             'id': goal.id,
             'category': goal.category,
-            'value': goal.value,
+            'target': goal.target,
             'createdAt': int(goal.createdAt.timestamp())
         }
         active_goals.append(goal_data)
@@ -385,18 +385,82 @@ def create_generic_goals():
     try: 
         create_goal_request = request.get_json()
         new_goals = filter_existing_goals(create_goal_request)
-        if len(new_goals) == 0: 
+        if new_goals == None: 
             return jsonify({'message': 'No new goals to add'})
         for goal in new_goals: 
-            new_goal = Goals(category=goal['category'], value=goal['value'], users=[])
+            new_goal = Goals(category=goal['category'], target=goal['target'], users=[])
             db.session.add(new_goal)
         db.session.commit()
         return jsonify({'message': 'goals successfully added!'})
+      
+
 
     except Exception as e:
         db.session.rollback()
         print(f"error at create_generic_goals: {str(e)}")
         return jsonify({'error at create_generic_goals': str(e)}), 500
+
+
+@app.route('/availablegoals', methods=['GET'])
+def get_goals():
+    try:
+        goals = db.session.query(Goals).all()
+        goal_list = []
+        for goal in goals:
+            user_list = []
+            for user in goal.users:
+                user_list.append(user.id)
+            goal_list.append({
+                'id': goal.id,
+                'target': goal.target,
+                'category': goal.category,
+                'users': user_list,
+                'createdAt': goal.createdAt
+            })
+        return jsonify(goal_list)
+
+    except Exception as e:
+        print(f"error at get_goals: {str(e)}")
+        return jsonify({'error at get_goals': str(e)}), 500
+    
+
+@app.route('/followgoal/<userId>/<goalId>', methods=['POST'])
+def follow_goal(userId, goalId):
+    try: 
+        user = User.query.get(userId)
+        goal = Goals.query.get(goalId)
+        if goal not in user.goals:
+            goal.users.append(user)
+        
+        db.session.commit()
+        return jsonify({'message': 'goal followed!'})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"error at follow_goal: {str(e)}")
+        return jsonify({'error at follow_goal': str(e)}), 500
+    
+
+@app.route('/removegoal/<userId>/<goalId>', methods=['PUT'])
+def remove_goal(userId, goalId):
+    try: 
+        user = User.query.get(userId)
+        goal = Goals.query.get(goalId)
+
+        goal.users.remove(user)
+        db.session.add(goal)
+
+        user.goals.remove(goal)
+        db.session.add(user)
+        
+        db.session.commit()
+        return jsonify({'message': 'goal removed!'})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"error at remove_goal: {str(e)}")
+        return jsonify({'error at remove_goal': str(e)}), 500
+
 
 
 # Helper Functions
@@ -608,14 +672,14 @@ def user_to_json(user, transaction):
 
 """
 helper function that queries the Goals table to ensure no goals that already exist
-(share category and value) are duplicated
+(share category and target) are duplicated
 """
 def filter_existing_goals(create_goal_request):
     result = []
     for goal in create_goal_request:
-        value = goal['value']
+        target = goal['target']
         category = goal['category']
-        exists = db.session.query(Goals).filter(and_(Goals.value == value, Goals.category == category)).first()
+        exists = db.session.query(Goals).filter(and_(Goals.target == target, Goals.category == category)).first()
         if not exists:
             result.append(goal)
     return result
