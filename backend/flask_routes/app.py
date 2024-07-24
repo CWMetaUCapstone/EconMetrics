@@ -350,8 +350,6 @@ def get_similar_users():
 @app.route('/transId/<userId>', methods=['GET'])
 def get_latest_trans_id(userId):
     user = User.query.get(userId)
-    print(userId)
-    print(type(userId))
     transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
     # return type at an endpoint cannot be int so id is cast to string 
     return str(transaction.id)
@@ -430,7 +428,7 @@ def follow_goal(userId, goalId):
         user = User.query.get(userId)
         goal = Goals.query.get(goalId)
         if goal not in user.goals:
-            goal.users.append(user)
+            user.goals.append(goal)
         
         db.session.commit()
         return jsonify({'message': 'goal followed!'})
@@ -446,16 +444,13 @@ def remove_goal(userId, goalId):
     try: 
         user = User.query.get(userId)
         goal = Goals.query.get(goalId)
-
-        goal.users.remove(user)
-        db.session.add(goal)
-
-        user.goals.remove(goal)
-        db.session.add(user)
-        
-        db.session.commit()
-        return jsonify({'message': 'goal removed!'})
-
+        if goal in user.goals:
+            user.goals.remove(goal)
+            db.session.add(user)
+            db.session.commit()
+            return jsonify({'message': 'goal removed!'})
+        else:
+            return jsonify({'message': 'goal not found for user'})
     except Exception as e:
         db.session.rollback()
         print(f"error at remove_goal: {str(e)}")

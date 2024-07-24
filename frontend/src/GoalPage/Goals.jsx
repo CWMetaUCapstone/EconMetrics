@@ -41,15 +41,8 @@ function Goals() {
     }, [])
 
     useEffect(() => {
-        console.log('wow')
         getGoalsToAdd();
     }, [activeGoals])
-
-    // this call forces page to rerender when goal containers are clicked to update when goals are added/removed dynamically
-    const clickHandler = () => {
-        getActiveGoals();
-        getGoalsToAdd();
-    }
 
 
     return (
@@ -62,7 +55,7 @@ function Goals() {
                 <div className='ActiveGoalsContent'>
                         <h2> Your Active Goals</h2>
                         <div className='GoalsList'>
-                            <ActiveGoalsList goals={activeGoals}/>
+                            <ActiveGoalsList goals={activeGoals}  setActiveGoals={setActiveGoals}/>
                         </div>
                 </div>
             <div className='SuggestedGoals'>

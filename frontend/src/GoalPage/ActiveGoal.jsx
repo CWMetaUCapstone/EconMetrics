@@ -2,7 +2,7 @@ import './ActiveGoal.css'
 import { useParams } from 'react-router-dom';
 import { goalFormatter, stopTrackingGoal} from '../../HelperFuncs/utils';
 
-function ActiveGoal( {goal} ) {
+function ActiveGoal( {goal, setActiveGoals} ) {
 
     const { userId } = useParams();
 
@@ -11,6 +11,7 @@ function ActiveGoal( {goal} ) {
     const removeGoal = async() => {
         try { 
             const _ = stopTrackingGoal(goal.id, userId)
+            setActiveGoals(prev => prev.filter(activeGoals => activeGoals !== goal))
         } catch (error) {
             console.error('Error removing goal:', error);
         }
