@@ -26,6 +26,7 @@ model User {
   job      String?
   token    String?  @unique // the user's associated plaid access_token 
   transactions Transactions[] // array of associated transactions
+  goals     Goals[] // array of goals the user signed up for
 }
 
 model Transactions {
@@ -74,4 +75,12 @@ model Transactions {
   time                  DateTime @default(now()) // column to store the timestamp at which a trasaction was logged so we can fetch most recent
   @@index([time])
   transaction_date      Int? // this stores a basic int to test over time, entered manually
+}
+
+model Goals {
+  id        Int     @id @default(autoincrement())
+  users     User[] // array of users that have signed up for this goal
+  category  String // the category this goal is for ex. legal_services
+  target     Int // the percent this goal is targeting users to raise/lower their spending positive values represent raising values (only for investment_and_saving), otherwise value is negative
+  createdAt DateTime @default(now())
 }
