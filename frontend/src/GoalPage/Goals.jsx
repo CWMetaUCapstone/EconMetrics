@@ -2,7 +2,8 @@ import './Goals.css'
 import ProfileTopBar from '../ProfilePage/ProfileTopBar';
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchActiveGoals, fetchAvailableGoals } from '../../HelperFuncs/utils';
+import { fetchActiveGoals, fetchAvailableGoals, fetchTransaction, fetchSimilarUsers, fetchProfile } from '../../HelperFuncs/utils';
+import { findPersonalizedGoals } from '../../HelperFuncs/personalization';
 import AddGoalsList from './AddGoalsList';
 import ActiveGoalsList from './ActiveGoalsList';
 
@@ -10,7 +11,10 @@ function Goals() {
 
     const { userId } = useParams();
     const [activeGoals, setActiveGoals] = useState([]);
+    const [personalizedGoals, setPersonalizedGoals] = useState([]);
     const [availableGoals, setAvailableGoals] = useState([]);
+    const [transaction, setTransaction] = useState([]);
+    const [similarUsers, setSimilarUsers] = useState([])
 
     const getActiveGoals = async () => {
         try {
@@ -18,6 +22,35 @@ function Goals() {
             setActiveGoals(fetchedGoals)
         } catch (error) {
             console.error('Error fetching active goals:', error);
+        }
+    }
+
+    const getUserTransaction = async () => {
+        try{
+            const transactionData = await fetchTransaction(userId)
+            setTransaction(transactionData);
+        } catch (error) {
+            console.error('Error fetching user transaction:', error);
+        }
+    }
+
+    /*
+    helper that first retrieves the profile data for the logged in user and exchanges this data
+    for the set of similar users
+    */
+    const getSimilarUserData = async () => {
+        try {
+            const userData = await fetchProfile(userId);
+            if (userData) {
+                try {
+                    const similarData = await fetchSimilarUsers(userData);
+                    setSimilarUsers(similarData);
+                } catch(error) {
+                    console.error('Error fetching similar users:', error)
+                }
+            }
+        } catch (error) {
+            console.error('error fetching user data:', error);
         }
     }
 
@@ -30,6 +63,8 @@ function Goals() {
                 !activeGoals.some(activeGoal => activeGoal.id === goal.id)
             );
             setAvailableGoals(filteredGoals);
+            const personalGoals = findPersonalizedGoals(filteredGoals, transaction, similarUsers)
+            setPersonalizedGoals(personalGoals)
         }  catch (error) {
             console.error('Error fetching available goals:', error);
         }
@@ -38,6 +73,8 @@ function Goals() {
 
     useEffect(() => {
         getActiveGoals();
+        getUserTransaction();
+        getSimilarUserData();
     }, [])
 
     useEffect(() => {
@@ -61,6 +98,7 @@ function Goals() {
             <div className='SuggestedGoals'>
                 <div className='SuggestedGoalsContent'>
                     <h2> Personalized Suggested Goals</h2>
+                        <AddGoalsList goals={personalizedGoals} setActiveGoals={setActiveGoals}/>
                 </div>
                 <div className='SuggestedList'>
                 </div>

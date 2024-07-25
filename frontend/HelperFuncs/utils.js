@@ -333,7 +333,7 @@ export const fetchSimilarUsers = async (profileData) => {
       throw new Error('Network response was not ok at fetchSimilarUsers', Error);
     }
     const data = await response.json();
-    return data;
+    return data.data;
   };
 
 

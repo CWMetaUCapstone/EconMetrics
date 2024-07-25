@@ -91,6 +91,7 @@ class User(db.Model):
     token = db.Column(db.String(120), nullable=True, unique=True) 
     transactions = relationship("Transactions", back_populates="user")
     goals = relationship("Goals", secondary='user_goals', back_populates="users")
+    similarusers = relationship("SimilarUsers", back_populates="user")
 
 class Transactions(db.Model):
     __tablename__ = 'Transactions'
@@ -147,6 +148,53 @@ class Goals(db.Model):
     category = db.Column(db.String)
     target = db.Column(db.Integer)
     createdAt = db.Column(db.DateTime, server_default=func.now())
+
+class SimilarUsers(db.Model):
+    __tablename__ = 'SimilarUsers'
+    id = db.Column(db.Integer, primary_key=True)
+    user = relationship("User", back_populates="similarusers")
+    userId = db.Column(db.Integer, ForeignKey('User.id'))
+    similarId = db.Column(db.Integer, unique=True)
+
+    rent = db.Column(db.Numeric(13, 2), nullable=True)
+    utilities = db.Column(db.Numeric(13, 2), nullable=True)
+    housing = db.Column(db.Numeric(13, 2), nullable=True)
+    loans = db.Column(db.Numeric(13, 2), nullable=True)
+    student_loans = db.Column(db.Numeric(13, 2), nullable=True)
+    car_loans_and_lease = db.Column(db.Numeric(13, 2), nullable=True)
+    credit_card_payments = db.Column(db.Numeric(13, 2), nullable=True)
+    other_loans = db.Column(db.Numeric(13, 2), nullable=True)
+    entertainment = db.Column(db.Numeric(13, 2), nullable=True)
+    streaming_services = db.Column(db.Numeric(13, 2), nullable=True)
+    other_entertainment = db.Column(db.Numeric(13, 2), nullable=True)
+    food = db.Column(db.Numeric(13, 2), nullable=True)
+    restaurants = db.Column(db.Numeric(13, 2), nullable=True)
+    groceries = db.Column(db.Numeric(13, 2), nullable=True)
+    medical_care = db.Column(db.Numeric(13, 2), nullable=True)
+    transportation = db.Column(db.Numeric(13, 2), nullable=True)
+    gas = db.Column(db.Numeric(13, 2), nullable=True)
+    parking = db.Column(db.Numeric(13, 2), nullable=True)
+    ride_share = db.Column(db.Numeric(13, 2), nullable=True)
+    public_transit = db.Column(db.Numeric(13, 2), nullable=True)
+    other_transportation = db.Column(db.Numeric(13, 2), nullable=True)
+    merchandise = db.Column(db.Numeric(13, 2), nullable=True)
+    retail = db.Column(db.Numeric(13, 2), nullable=True)
+    apparel = db.Column(db.Numeric(13, 2), nullable=True)
+    e_commerce = db.Column(db.Numeric(13, 2), nullable=True)
+    electronics = db.Column(db.Numeric(13, 2), nullable=True)
+    pet_supplies = db.Column(db.Numeric(13, 2), nullable=True)
+    super_stores = db.Column(db.Numeric(13, 2), nullable=True)
+    other_merchandise = db.Column(db.Numeric(13, 2), nullable=True)
+    other_expenses = db.Column(db.Numeric(13, 2), nullable=True)
+    gym_membership = db.Column(db.Numeric(13, 2), nullable=True)
+    financial_planning = db.Column(db.Numeric(13, 2), nullable=True)
+    legal_services = db.Column(db.Numeric(13, 2), nullable=True)
+    insurance = db.Column(db.Numeric(13, 2), nullable=True)
+    tax_payments = db.Column(db.Numeric(13, 2), nullable=True)
+    travel = db.Column(db.Numeric(13, 2), nullable=True)
+    investment_and_saving = db.Column(db.Numeric(13, 2), nullable=True)
+    investment = db.Column(db.Numeric(13, 2), nullable=True)
+    savings_account = db.Column(db.Numeric(13, 2), nullable=True)
 
 # the user_goals table serves as an intermediary between users and goals to facilitate the many-to-many relationship
 user_goals = db.Table('user_goals',
@@ -346,8 +394,10 @@ def get_users(searchTerm):
 def get_similar_users():
     try:
         profile_data = request.get_json()
+        userId = profile_data['id']
         similar_transactions = find_similar_users(profile_data)
-        return jsonify(similar_transactions)
+        db_status = save_similar_users(userId, similar_transactions)
+        return jsonify({'message': db_status, 'data': similar_transactions})
     except Exception as e:
         print(f"error at get_similar_users: {str(e)}")
 
@@ -667,6 +717,37 @@ def user_to_json(user, transaction):
     return result
 
 """
+helper that caches similar users as rows in "SimilarUsers" table when a user's similar users are computed
+"""
+def save_similar_users(userId, similar_transactions):
+    try:
+        for similar in similar_transactions :
+            # guard against adding the same data multiple times
+            existing_user = SimilarUsers.query.filter_by(similarId=similar['id']).first()
+            if existing_user:
+                continue 
+            similarUser = SimilarUsers(userId=userId)
+            setattr(similarUser, 'similarId' , similar['id'])
+            for category, data in similar['transaction'].items():
+                total_percent_attr = category
+                if hasattr(similarUser, total_percent_attr):
+                    setattr(similarUser, total_percent_attr, data['total_percent'])
+                
+                for detail in data['details']:
+                    sub_category_attr = detail['name']  
+                    if hasattr(similarUser, sub_category_attr):
+                        setattr(similarUser, sub_category_attr, detail['percent'])
+            db.session.add(similarUser)
+        db.session.commit()
+        
+        return "Transaction data saved successfully."
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"error saving similar users for user {userId}: {e} at save_similar_users")
+        return f"an error occurred at save_similar_users: {str(e)}"
+    
+
+"""
 helper function that queries the Goals table to ensure no goals that already exist
 (share category and target) are duplicated
 """
@@ -699,7 +780,6 @@ def send_goal_update_msg(userId):
     except Exception as e:
         print(f"error at send_goal_update_msg: {str(e)}")
         return jsonify({'failed to send email': str(e)})
-
 
 
 """
