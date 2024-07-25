@@ -30,6 +30,20 @@ export const submitProfile = async (userData) => {
     }
 }
 
+ /* 
+salary ranges are based on 2022 single-filer US tax brackets
+source: https://www.fidelity.com/learning-center/personal-finance/tax-brackets
+*/
+export const salary_ranges = [
+    { value: '≤ $10,275', label: '≤ $10,275' },
+    { value: '$10,275 - $41,775', label: '$10,275 - $41,775' },
+    { value: '$41,776 - $89,075', label: '41,776 - $89,075' },
+    { value: '$89,076 - $170,050', label: '$89,076 - $170,050' },
+    { value: '$170,051 - $215,950', label: '$170,051 - $215,950' },
+    { value: '$215,951 - $539,900', label: '$215,951 - $539,900' },
+    { value: '≥ $539,901', label: '≥ $539,901' }
+];
+
 
 /* 
 helper function to make put request to update user data with profile info 
