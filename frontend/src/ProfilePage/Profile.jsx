@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';
-import { fetchProfile, getRows, fetchSimilarUsers, getSelectData, fetchHistoricalData, fetchLatestTransID} from '../../HelperFuncs/utils';
+import { fetchProfile, getRows, fetchSimilarUsers, getSelectData, fetchHistoricalData, fetchLatestTransID, findGenericGoals} from '../../HelperFuncs/utils';
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-charts-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
@@ -107,6 +107,12 @@ function Profile() {
             setRows(getRows(transactions, similarUsers))
         }
     }, [transactions]);
+
+    useEffect(() => {
+        if (rows.length > 1){
+            findGenericGoals([...rows]);
+        }
+    })
 
     useEffect(() => {
         if(mostRecentTransId != 0){

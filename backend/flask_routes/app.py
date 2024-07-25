@@ -14,7 +14,9 @@ from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
 from cryptography.fernet import Fernet
 from sqlalchemy import or_
+from sqlalchemy import and_
 import re
+from datetime import datetime, timedelta
 
 
 # Plaid imports
@@ -127,7 +129,6 @@ class Goals(db.Model):
     category = db.Column(db.String)
     value = db.Column(db.Integer)
     createdAt = db.Column(db.DateTime, server_default=func.now())
-    deadline = db.Column(db.DateTime)
 
 # the user_goals table serves as an intermediary between users and goals to facilitate the many-to-many relationship
 user_goals = db.Table('user_goals',
@@ -365,6 +366,40 @@ def get_historical_data(selectedOption, userId):
     return jsonify(historical_data)
 
 
+@app.route('/activegoals/<userId>', methods =['GET'])
+def get_active_user_goals(userId):
+    user = User.query.get(userId)
+    active_goals = []
+    for goal in user.goals:
+        goal_data = {
+            'id': goal.id,
+            'category': goal.category,
+            'value': goal.value,
+            'createdAt': int(goal.createdAt.timestamp())
+        }
+        active_goals.append(goal_data)
+    return jsonify(active_goals)
+
+
+@app.route('/creategoals', methods=['POST'])
+def create_generic_goals():
+    try: 
+        create_goal_request = request.get_json()
+        new_goals = filter_existing_goals(create_goal_request)
+        if len(new_goals) == 0: 
+            return jsonify({'message': 'No new goals to add'})
+        for goal in new_goals: 
+            new_goal = Goals(category=goal['category'], value=goal['value'], users=[])
+            db.session.add(new_goal)
+        db.session.commit()
+        return jsonify({'message': 'goals successfully added!'})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"error at create_generic_goals: {str(e)}")
+        return jsonify({'error at create_generic_goals': str(e)}), 500
+
+
 # Helper Functions
 """
 helper to post the transaction data found by [aggregate_user_data] into an associated Transaction table
@@ -570,6 +605,20 @@ def user_to_json(user, transaction):
     result['roommates'] = user.roommates
     result['children'] = user.children
     result['transaction'] = transaction_to_json(transaction)
+    return result
+
+"""
+helper function that queries the Goals table to ensure no goals that already exist
+(share category and value) are duplicated
+"""
+def filter_existing_goals(create_goal_request):
+    result = []
+    for goal in create_goal_request:
+        value = goal['value']
+        category = goal['category']
+        exists = db.session.query(Goals).filter(and_(Goals.value == value, Goals.category == category)).first()
+        if not exists:
+            result.append(goal)
     return result
 
 
