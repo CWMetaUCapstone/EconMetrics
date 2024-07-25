@@ -538,29 +538,3 @@ export function goalFormatter(category, target) {
     message += category + ' by ' + target.toString() + '%'
     return message
 }
-
-
-/* 
-helper to append the requested goal onto the users Goals column and update
-the corresponding goal entry to include user as a tracked user
-*/
-export const followNewGoal = async(goalId, userId) => {
-    const response = await fetch(`http://localhost:3000/followgoal/${userId}/${goalId}`,
-     { method: 'POST' }
-    );
-    if (!response.ok) {
-        throw new Error('Network response was not ok at followNewGoal', Error);
-    }
-}
-
-/*
-helper function to delete a goal-user relationship
-*/
-export const stopTrackingGoal = async(goalId, userId) => {
-    const response = await fetch(`http://localhost:3000/removegoal/${userId}/${goalId}`,
-     { method: 'PUT' }
-    );
-    if (!response.ok) {
-        throw new Error('Network response was not ok at stopTrackingGoal', Error);
-    }
-}

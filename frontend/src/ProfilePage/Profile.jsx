@@ -1,5 +1,5 @@
 import './Profile.css'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTransaction } from '../../HelperFuncs/utils';
 import ProfileTopBar from './ProfileTopBar';

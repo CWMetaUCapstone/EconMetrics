@@ -1,6 +1,6 @@
 import './ActiveGoal.css'
 import { useParams } from 'react-router-dom';
-import { goalFormatter, stopTrackingGoal} from '../../HelperFuncs/utils';
+import { goalFormatter } from '../../HelperFuncs/utils';
 
 function ActiveGoal( {goal, setActiveGoals} ) {
 
@@ -10,8 +10,15 @@ function ActiveGoal( {goal, setActiveGoals} ) {
 
     const removeGoal = async() => {
         try { 
-            const _ = stopTrackingGoal(goal.id, userId)
-            setActiveGoals(prev => prev.filter(activeGoals => activeGoals !== goal))
+            const response = await fetch(`http://localhost:3000/removegoal/${userId}/${goal.id}`,
+            { method: 'PUT' }
+           );
+           if (!response.ok) {
+               throw new Error('Network response was not ok at removeaGoal', Error);
+           } 
+            else {
+                setActiveGoals(prev => prev.filter(activeGoals => activeGoals !== goal))
+           }
         } catch (error) {
             console.error('Error removing goal:', error);
         }
