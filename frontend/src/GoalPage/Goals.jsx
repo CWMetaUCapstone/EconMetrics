@@ -2,29 +2,47 @@ import './Goals.css'
 import ProfileTopBar from '../ProfilePage/ProfileTopBar';
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchActiveGoals } from '../../HelperFuncs/utils';
+import { fetchActiveGoals, fetchAvailableGoals } from '../../HelperFuncs/utils';
 import AddGoalsList from './AddGoalsList';
 import ActiveGoalsList from './ActiveGoalsList';
-import AddGoals from './AddGoalsList';
 
 function Goals() {
 
     const { userId } = useParams();
     const [activeGoals, setActiveGoals] = useState([]);
+    const [availableGoals, setAvailableGoals] = useState([]);
 
     const getActiveGoals = async () => {
         try {
-            const fetchedGoals = fetchActiveGoals(userId)
+            const fetchedGoals = await fetchActiveGoals(userId)
             setActiveGoals(fetchedGoals)
         } catch (error) {
             console.error('Error fetching active goals:', error);
         }
     }
 
+    // fetch all goals and then filter out goals this user is already tracking
+    const getGoalsToAdd = async () => {
+        try {
+            const fetchedGoals = await fetchAvailableGoals();
+            // if a user is already tracking a goal it shouldn't be in the list of available goals
+            const filteredGoals = fetchedGoals.filter(goal => 
+                !activeGoals.some(activeGoal => activeGoal.id === goal.id)
+            );
+            setAvailableGoals(filteredGoals);
+        }  catch (error) {
+            console.error('Error fetching available goals:', error);
+        }
+        
+    }
+
     useEffect(() => {
         getActiveGoals();
-    }, [userId])
+    }, [])
 
+    useEffect(() => {
+        getGoalsToAdd();
+    }, [activeGoals])
 
 
     return (
@@ -37,7 +55,7 @@ function Goals() {
                 <div className='ActiveGoalsContent'>
                         <h2> Your Active Goals</h2>
                         <div className='GoalsList'>
-                            <ActiveGoalsList goals={activeGoals}/>
+                            <ActiveGoalsList goals={activeGoals}  setActiveGoals={setActiveGoals}/>
                         </div>
                 </div>
             <div className='SuggestedGoals'>
@@ -45,14 +63,13 @@ function Goals() {
                     <h2> Personalized Suggested Goals</h2>
                 </div>
                 <div className='SuggestedList'>
-                    <AddGoals/>
                 </div>
             </div>
             <div className='AddGoals'>
                 <div className='AddGoalsContent'>
                     <h2>Add a New Goal</h2>
                     <div className='AddList'>
-                        <AddGoals/>
+                        <AddGoalsList goals={availableGoals} setActiveGoals={setActiveGoals}/>
                     </div>
                 </div>
             </div>

@@ -423,6 +423,7 @@ export const fetchLatestTransID = async(userId) => {
     return  parseInt(data, 10);
 }
 
+
 /*
 helper function to return the list of goals associated with the user @ [userId]
 */
@@ -447,37 +448,13 @@ export const findGenericGoals = async(transactionData) => {
     let goals = []
     for(let i = 0; i < subfieldTransactions.length ; i++){
         let transaction = subfieldTransactions[i]
-        if(transaction.category[1] === 'savings_account' || transaction.category[1] === 'investement'){
+        if(transaction.category[1] === 'savings_account' || transaction.category[1] === 'investement' || transaction.category[1] === 'financial_planning'){
             // for investment categories, a negative difference is bad as it indicates we're saving less than average
-            if(transaction.difference < 0){
-                if(transaction.difference < -5){
-                    // if difference exceeds 5%, goal amount is 5%
-                    goals.push({
-                        'category': transaction.category[1],
-                        'value': -5
-                    })
-                } else{
-                    // otherwise the value becomes the floor rounded difference since we're dealing with negative values
-                    goals.push({
-                        'category': transaction.category[1],
-                        'value': -Math.floor(transaction.difference)
-                    })
-                }
-            }
+            goals.push(findInvestmentGoals(transaction))
         } else {
             if(transaction.difference > 0){
                 // logic for other categories is reversed from savings/investment
-                if(transaction.difference > 5){
-                    goals.push({
-                        'category': transaction.category[1],
-                        'value': 5
-                    })
-                } else{
-                    goals.push({
-                        'category': transaction.category[1],
-                        'value': Math.ceil(transaction.difference)
-                    })
-                }
+                goals.push(findExpenseGoals(transaction))
             }
         }
         const response = await fetch('http://localhost:3000/creategoals', {
@@ -489,6 +466,89 @@ export const findGenericGoals = async(transactionData) => {
             throw new Error('Network response was not ok at fetchSimilarUsers', Error);
         }
     }
+}
 
 
+/* 
+helper function that tests if [transaction] meets criteria to be added to the
+database of goals when [transaction] is of category investment, savings account, or financial planning.
+An investment goal is added if the difference between a user's spending and the average
+among similar users is negative (i.e. this user is saving/investing less than their peers)
+The 'target' or value users are encouraged to hit in a goal follows this rule:
+a. if difference is within 5%, the goal amount is the difference between user expenditure and average
+b. if differnce is or exceeds 5%, the goal amount is 5% 
+*/
+function findInvestmentGoals(transaction) {
+    if(transaction.difference < 0){
+        if(transaction.difference < -5){
+            // if difference exceeds 5%, goal amount is 5%
+            return({
+                'category': transaction.category[1],
+                'target': 5
+            })
+        } else{
+            // otherwise the value becomes the floor rounded difference since we're dealing with negative values
+            return({
+                'category': transaction.category[1],
+                'target': Math.floor(transaction.difference) * -1
+            })
+        }
+    }
+}
+
+
+/*
+helper function that tests if [transaction] meets criteria to be added to the
+database of goals when [transaction] is an expense, i.e. any category not investment_and_savings.
+An expense goal is added if the difference between a user's spending and the average
+among similar users is negative (i.e. this user is spending more than their peers)
+The 'target' or value users are encouraged to hit in a goal follows this rule:
+a. if difference is within 5%, the goal amount is the difference between user expenditure and average
+b. if differnce is or exceeds 5%, the goal amount is 5% 
+*/
+function findExpenseGoals(transaction) {
+    // logic for other categories is reversed from savings/investment
+    if(transaction.difference > 5){
+        return({
+            'category': transaction.category[1],
+            'target': 5
+        })
+    } else{
+        return({
+            'category': transaction.category[1],
+            'target': Math.ceil(transaction.difference)
+        })
+    }
+}
+
+
+/*
+helper that returns the list of available goals in the Goals database
+*/
+export const fetchAvailableGoals = async() => {
+    const response = await fetch(`http://localhost:3000/availablegoals`, 
+    { method: 'GET' })
+    if(!response.ok){
+        throw new Error('Network response was not ok at fetchAvailableGoals', Error);
+    }
+    const data = await response.json();
+    return data;
+}
+
+
+/*
+helper function to return strings that provide the user with concise details
+about the goal they're tracking / adding
+Example output: "lower [resturant] spending by [5]%"
+*/
+export function goalFormatter(category, target) {
+    let message = ''
+    // as with all other goal handling, the savings and investment goals are reversed, i.e. raise rather than lower
+    if(category === 'savings_account' || category === 'investment' || category === 'financial_planning'){
+        message += 'raise spending on '
+    } else {
+        message += 'lower spending on '
+    }
+    message += category + ' by ' + target.toString() + '%'
+    return message
 }

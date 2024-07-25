@@ -2,7 +2,7 @@ import './SearchResults.css'
 import { useParams } from 'react-router-dom';
 import Topbar from '../HomePage/Top/Topbar';
 import ProfileTopBar from '../ProfilePage/ProfileTopBar';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-charts-enterprise";
 import "ag-grid-community/styles/ag-grid.css";

@@ -1,0 +1,34 @@
+.ActiveGoalList {
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    background-color: #36454f;
+    padding: 2.5%;
+    overflow-y: scroll;
+    height: 50vh;
+}
+
+.ActiveGoalList > div:nth-child(odd) {
+    background-color: #536878;
+}
+
+.ActiveGoalList > div:nth-child(odd) .RemoveButton {
+    background-color: 	#ff7b7b;
+}
+
+.ActiveGoalList > div:nth-child(odd) .RemoveButton:hover {
+    background-color: 	#ff0000;
+}
+
+.ActiveGoalList > div:nth-child(even) {
+    background-color: #405060; 
+}
+
+.ActiveGoalList > div:nth-child(even) .RemoveButton {
+    background-color: #ff5252;
+}
+
+.ActiveGoalList > div:nth-child(even) .RemoveButton:hover {
+    background-color: #a70000;
+}
