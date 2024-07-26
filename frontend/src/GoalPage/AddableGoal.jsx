@@ -1,5 +1,5 @@
 import './AddableGoal.css'
-import { goalFormatter, followNewGoal} from '../../HelperFuncs/utils';
+import { goalFormatter } from '../../HelperFuncs/utils';
 import { useParams } from 'react-router-dom';
 
 function AddableGoal({goal, setActiveGoals}) {
@@ -9,11 +9,14 @@ function AddableGoal({goal, setActiveGoals}) {
     const message = goalFormatter(goal.category, goal.target);
 
     const addGoal = async() => {
-        try { 
-            const _ = followNewGoal(goal.id, userId)
+        const response = await fetch(`http://localhost:3000/followgoal/${userId}/${goal.id}`,
+        { method: 'POST' }
+        );
+        if (!response.ok) {
+            throw new Error('Network response was not ok at addGoal', Error);
+        }
+        else {
             setActiveGoals(prev => [... prev, goal])
-        } catch (error) {
-            console.error('Error adding goal:', error);
         }
     }
 
