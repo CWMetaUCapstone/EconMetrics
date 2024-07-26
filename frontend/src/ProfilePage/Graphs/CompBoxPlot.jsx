@@ -47,30 +47,35 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg, sho
                 category: category
             }));
             
-            // elements are ordered in ascending order of value to make quantile / median computation easier
+            // elements are ordered in ascending order of value to make quartile / median computation easier
             entries.sort((a,b) => a.value - b.value)
             const values = entries.map(v => v.value);
-
             /* get the relevant descriptive statistical details for our data. 
-            This includes the quantile data: .25, .5 (median),and .75 percentiles. 
-            interquantile range (IQR) which measures the range of the middle 50% of data (this defines the length of the box) and 
+            This includes the quartile data: .25, .5 (median),and .75 percentiles. 
+            interquartile range (IQR) which measures the range of the middle 50% of data (this defines the length of the box) and 
             upper and lower outlier range bounds (these define whisker length)
             */ 
-           const bottomQuantile = d3.quantile(values, 0.25)
-           const medianQuantile = d3.quantile(values, 0.5)
-           const topQuantile = d3.quantile(values, 0.75)
-           const intraQuantileRange = topQuantile - bottomQuantile
-           const bottomOutlierRange = Math.max(d3.min(values), bottomQuantile - intraQuantileRange * 1.5)
-           const topQuantileRange = Math.min(d3.max(values), topQuantile + intraQuantileRange * 1.5)
+            const maxima = values[values.length -1]
+            const minima = values[0]
+            const topQuartileIndex = Math.floor(0.75 * values.length)
+            const topQuartile = values[topQuartileIndex]
+            const medianQuartileIndex =  Math.floor(0.5 * values.length)
+            const medianQuartile = values[medianQuartileIndex]
+            const bottomQuartileIndex = Math.floor(0.25 * values.length)
+            const bottomQuartile = values[bottomQuartileIndex]
+            const intraQuartileRange = topQuartile - bottomQuartile
+            const bottomOutlierRange = Math.max(minima, bottomQuartile - intraQuartileRange * 1.5)
+            const topOutlierRange = Math.min(maxima, topQuartile + intraQuartileRange * 1.5)
 
            return {
             category, 
             entries, 
-            quantiles: [bottomQuantile, medianQuantile, topQuantile],
-            range: [bottomOutlierRange, topQuantileRange],
+            quartiles: [bottomQuartile, medianQuartile, topQuartile],
+            range: [bottomOutlierRange, topOutlierRange],
             userData: [userData]
            }
           });
+        
         
         // a set of all user Ids is used to assign dots for each user a unique color for better UX
         const idList = [... new Set(categoryValues.flatMap(d => d.entries.map(v => v.id)))]
@@ -132,11 +137,17 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg, sho
             
             boxPlots.append("rect")
                 .attr("class", "box-plot")
-                .attr("y", d => yAxis(d.quantiles[2]))
-                .attr("height", d => yAxis(d.quantiles[0]) - yAxis(d.quantiles[2]))
+                .attr("y", d => yAxis(d.quartiles[2]))
+                .attr("height", d => yAxis(d.quartiles[0]) - yAxis(d.quartiles[2]))
                 .attr("width", boxWidth)
                 .attr("fill", "#ddd")
                 .attr("opacity", 0.6)
+                .on("click", (event, d) => {
+                    // if user data is being shown all other inputs are blocked
+                    if(!showUserData){
+                        OnBoxClick(d)
+                    }
+                })
 
             boxPlots.append("line")
                 .attr("class", "whisker")
@@ -148,8 +159,8 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg, sho
             
             boxPlots.append("line")
                 .attr("class", "median")
-                .attr("y1", d => yAxis(d.quantiles[1]))
-                .attr("y2", d => yAxis(d.quantiles[1]))
+                .attr("y1", d => yAxis(d.quartiles[1]))
+                .attr("y2", d => yAxis(d.quartiles[1]))
                 .attr("x1", 0)
                 .attr("x2", boxWidth)
                 .attr("stroke", "black")
@@ -212,7 +223,7 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg, sho
             similarDots
                 .attr("fill", "#ddd")
                 .style("pointer-events", "none")
-                
+
         }
 
         // if the user hovers over a dot, all dots corresponding to the user associated with that dot are highlighted
@@ -248,11 +259,7 @@ function CompBoxPlot({userData, similarUserData, OnClickedUserId, onSaveSvg, sho
             }
 
         })
-
-        svg.selectAll("rect.box-plot")
-            .on("click", (event, d) => {
-                OnBoxClick(d)
-            })
+          
 
         if (onSaveSvg && svgRef.current) {
             onSaveSvg(svgRef.current);
