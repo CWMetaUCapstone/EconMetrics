@@ -1,7 +1,7 @@
 import './PageOne.css';
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
-import { populateAccount } from '../../../HelperFuncs/utils';
+import { populateAccount, salary_ranges } from '../../../HelperFuncs/utils';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchJobTitles } from '../../../HelperFuncs/utils';
@@ -38,20 +38,6 @@ function PageOne({ nextPage }) {
             getSearchedJobs()
         }
     }, [searchTerm]);
-
-    /* 
-    salary ranges are based on 2022 single-filer US tax brackets
-    source: https://www.fidelity.com/learning-center/personal-finance/tax-brackets
-    */
-    const salary_ranges = [
-        { value: '≤ $10,275', label: '≤ $10,275' },
-        { value: '$10,275 - $41,775', label: '$10,275 - $41,775' },
-        { value: '$41,776 - $89,075', label: '41,776 - $89,075' },
-        { value: '$89,076 - $170,050', label: '$89,076 - $170,050' },
-        { value: '$170,051 - $215,950', label: '$170,051 - $215,950' },
-        { value: '$215,951 - $539,900', label: '$215,951 - $539,900' },
-        { value: '≥ $539,901', label: '≥ $539,901' }
-    ];
 
     /* 
     function to handle form submission, processes form data into a dict [userData] and sends
