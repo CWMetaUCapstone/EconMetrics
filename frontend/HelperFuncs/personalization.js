@@ -104,13 +104,13 @@ function isOutsideIQR(userPercent, similarUserData, category){
     const lowerQuartilIndex = Math.floor(0.25 * similarUserData.length)
     const lowerQuartile = similarUserData[lowerQuartilIndex]
 
-    const IQR = upperQuartile - lowerQuartile
+    const interQuartileRange = upperQuartile - lowerQuartile
     // logic is reversed for the three "good" expensives, financial planning, savings account, and investment
     if((category !== 'investment' || category !== 'savings_ account' || category !== 'financial_planning')){
-        return userPercent > IQR
+        return userPercent > interQuartileRange
     } else {
         // this line is analagous to being "below" the IQR
-        return IQR < userPercent
+        return interQuartileRange < userPercent
     }
 }
 
@@ -205,11 +205,11 @@ function findPopulationStandardDeviation(userCategoryPercent, similarCategoryDat
     const combinedCategoryList = [userCategoryPercent, ...similarCategoryData]
     const populationSize = combinedCategoryList.length
     const populationMean = getAverage(combinedCategoryList)
-    let SST = 0
+    let totalSumOfSquares = 0
     for(let i = 0 ; i < populationSize ; i ++){
-        SST += Math.pow((combinedCategoryList[i] - populationMean), 2)
+        totalSumOfSquares += Math.pow((combinedCategoryList[i] - populationMean), 2)
     }
-    return Math.sqrt(SST / populationSize)
+    return Math.sqrt(totalSumOfSquares / populationSize)
 }
 
 
