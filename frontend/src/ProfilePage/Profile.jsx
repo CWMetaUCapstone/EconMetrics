@@ -363,9 +363,9 @@ function Profile() {
                 {
                     Object.keys(clickedBoxDetails).length > 0 ? (
                         <div className='ClickedDetails'>
-                            <p>25th Percentile: {clickedBoxDetails.quantiles[0].toFixed(2)} </p>
-                            <p>Median: {clickedBoxDetails.quantiles[1].toFixed(2)}</p>
-                            <p>75th Percentile: {clickedBoxDetails.quantiles[2].toFixed(2)}</p>
+                            <p>25th Percentile: {clickedBoxDetails.quartiles[0].toFixed(2)} </p>
+                            <p>Median: {clickedBoxDetails.quartiles[1].toFixed(2)}</p>
+                            <p>75th Percentile: {clickedBoxDetails.quartiles[2].toFixed(2)}</p>
                             <p>Upper Outlier Range: {clickedBoxDetails.range[1].toFixed(2)}</p>
                             <p>Lower Outlier Range: {clickedBoxDetails.range[0].toFixed(2)}</p>
                         </div>
