@@ -35,6 +35,12 @@ from data_handling.data_processing import aggregate_user_data
 from data_handling.data_maps import sum_category_map
 from data_handling.data_processing import create_pie_plot
 
+# notifications imports
+from flask_mail import Mail, Message
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+
 # load environment variables
 load_dotenv()
 
@@ -54,6 +60,20 @@ def create_plaid_client():
     return plaid_api.PlaidApi(api_client)
 
 plaid_client = create_plaid_client()
+
+# Flask Mail Configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'econmetrics.goalupdates@gmail.com'
+app.config['MAIL_PASSWORD'] = os.getenv('APP_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = 'econmetrics.goalupdates@gmail.com'
+
+# Scheduling / Cron Configuration
+scheduler = BackgroundScheduler()
+scheduler.start()
+
+mail = Mail(app)
 
 # Database Models
 class User(db.Model):
@@ -251,29 +271,14 @@ def exchange_public_token(userId):
 
 
 @app.route('/api/transactions/sync/<userId>', methods=['POST'])
-def transactions_sync(userId):
-    try:
-        user = User.query.get(userId)
-        # decrypt the access token from the database to use it
-        encrypted_token = user.token
-        key = os.getenv('ENCRYPTION_KEY')
-        cipher = Fernet(key)
-        decrypted_token = cipher.decrypt(encrypted_token.encode('utf-8')).decode('utf-8')
-
-        request = TransactionsSyncRequest(access_token=decrypted_token)
-        transactions = plaid_client.transactions_sync(request)
-        # transaction object is by default non-serialable hence why we transform it to a dictionary
-        transactions_data = {"transactions": []}
-        for transaction in transactions.added:
-            transactions_data["transactions"].append(transaction.to_dict())
-        clean_data = clean_transaction_data(transactions_data)
-        user_transaction_data = aggregate_user_data(clean_data)
-        db_status = save_transaction(userId, user_transaction_data)
-        return jsonify({'message': db_status, 'data': user_transaction_data})
+def transaction_sync_endpoint(userId):
+    try: 
+        transactions_sync(userId)
+        return jsonify({'message': 'successful sync!'})
     except Exception as e:
         print(f"error at transactions_sync: {str(e)}")
-        return jsonify({'error': 'error at transactions_sync'}), 500
-
+        return jsonify({'error': 'error at transaction_sync_endpoint'}), 500
+   
 
 @app.route('/transactions/<userId>', methods=['GET'])
 def get_latest_transaction(userId):
@@ -392,8 +397,6 @@ def create_generic_goals():
         db.session.commit()
         return jsonify({'message': 'goals successfully added!'})
       
-
-
     except Exception as e:
         db.session.rollback()
         print(f"error at create_generic_goals: {str(e)}")
@@ -456,7 +459,6 @@ def remove_goal(userId, goalId):
         db.session.rollback()
         print(f"error at remove_goal: {str(e)}")
         return jsonify({'error at remove_goal': str(e)}), 500
-
 
 
 # Helper Functions
@@ -585,7 +587,6 @@ def query_db(query):
     return results
 
 
-
 """
 helper function to handele numerical search queries, this function considers all salary levels that have
 at least one user in the database and checks to see if the query is within any of those ranges, this requires
@@ -681,8 +682,102 @@ def filter_existing_goals(create_goal_request):
     return result
 
 
+"""
+helper to send users notifications that update on the state of the goals they're currently tracking
+following a sync to grab users most recent transaction data from plaid
+"""
+def send_goal_update_msg(userId):
+    user = User.query.get(userId)
+    message_body = 'Here\'s your breakdown on goal progress since last week: \n' + format_updates(userId)
+    msg = Message('Your EconMetrics Goal Progress',
+                  sender='econmetrics.goalupdates@gmail.com',
+                  recipients=[user.email],
+                  body= message_body
+                  )
+    try:
+        mail.send(msg)
+        return jsonify({'message': 'email sent!'})
+    except Exception as e:
+        print(f"error at send_goal_update_msg: {str(e)}")
+        return jsonify({'failed to send email': str(e)})
+
+
+
+"""
+helper to format the list of updates for each goal a user is tracking when tranactions update and message is sent.
+User's receive emails that for each goal they're tracking, show how their spending on that category has changed between
+the past two most recent transaction syncs with the context of the goal amount
+"""
+def format_updates(userId):
+    update_msg = ''
+    user = User.query.get(userId)
+    goals = user.goals
+    new_transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).first()
+    # this gets last weeks transaction (the one before newest / second row) by simply skipping first row and getting the next row
+    last_transaction = Transactions.query.filter_by(userId=user.id).order_by(Transactions.time.desc()).offset(1).limit(1).first()
+    for goal in goals:
+        category = goal.category
+        update_msg += 'category: ' + category + ' targeted change in expenditure: ' + str(goal.target) +  ' this weeks percent: '+  str(getattr(new_transaction, category)) + ' last week\'s percent: ' + str(getattr(last_transaction, category)) + '\n'
+    return update_msg
+
+
+"""
+this function handles the transaction sync endpoint for updating user transactions
+this is designed as a helper so it can be used both by the flask route and in schedular cron job
+"""
+def transactions_sync(userId):
+    try:
+        user = User.query.get(userId)
+        # decrypt the access token from the database to use it
+        encrypted_token = user.token
+        key = os.getenv('ENCRYPTION_KEY')
+        cipher = Fernet(key)
+        decrypted_token = cipher.decrypt(encrypted_token.encode('utf-8')).decode('utf-8')
+
+        request = TransactionsSyncRequest(access_token=decrypted_token)
+        transactions = plaid_client.transactions_sync(request)
+        # transaction object is by default non-serialable hence why we transform it to a dictionary
+        transactions_data = {"transactions": []}
+        for transaction in transactions.added:
+            transactions_data["transactions"].append(transaction.to_dict())
+        clean_data = clean_transaction_data(transactions_data)
+        user_transaction_data = aggregate_user_data(clean_data)
+        db_status = save_transaction(userId, user_transaction_data)
+        return jsonify({'message': db_status, 'data': user_transaction_data})
+    except Exception as e:
+        print(f"error at transactions_sync: {str(e)}")
+        return jsonify({'error': 'error at transactions_sync'}), 500
+
+
+"""
+this helper function is called once per week to trigger an email update message for 
+every user that updates them on progress towards the goals they're tracking
+"""
+def weekly_sync():
+   with app.app_context():
+        try:
+            users = User.query.all()
+            for user in users:
+                id = user.id
+                transactions_sync(id)
+                send_goal_update_msg(id)
+        except Exception as e:
+            return jsonify({'error': 'error at weekly_sync'}), 500
+
+
+# [weekly_sync] is called every sunday at 11:59PM PDT to notify users of goal progress and updates
+scheduler.add_job(
+    func=weekly_sync,
+    trigger=CronTrigger(day_of_week='sun', hour=23, minute=59),
+    id='cron_transaction_sync',
+    name="Weekly Transaction Update",
+    replace_existing=True
+)
+
+
 def create_app():
     return app
+
 
 if __name__ == '__main__':
     app = create_app()
