@@ -261,6 +261,15 @@ function Profile() {
                 <h2>Transactions Info</h2>
                 <div className='TransactionsTitle'>
                     <h3>Your Transactions Breakdown</h3>
+                    <div className='TransactionToolTip'>
+                        <h3>How do I read my transaction breakdown?</h3>
+                        <span className='TransactionToolTipText'>
+                            Your transaction breakdown is based on your weekly expenditure (starting from Monday) and is framed in terms of percentages of how much you spent. So if you 
+                            see x.xx under "resturants", that means of the money you spent last week, x.xx% of it was spending at resturants. For other two columns "Average of Similar Users" shows you 
+                            the median perentage of expenditure spent on that category by user's who we think you're comparable to. Lastly the Difference column shows you
+                            your percent minus the median of similar users so you can see how exactly your habits compare to those similar to you. 
+                        </span>
+                    </div>
                 </div>
                 <div className='ag-theme-alpine' style={{ height: 400, width: 800}}>
                     <AgGridReact 
