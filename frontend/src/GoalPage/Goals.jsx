@@ -63,7 +63,7 @@ function Goals() {
                 !activeGoals.some(activeGoal => activeGoal.id === goal.id)
             );
             setAvailableGoals(filteredGoals);
-            const personalGoals = findPersonalizedGoals(filteredGoals, transaction, similarUsers)
+            const personalGoals = await findPersonalizedGoals(filteredGoals, transaction, similarUsers)
             setPersonalizedGoals(personalGoals)
         }  catch (error) {
             console.error('Error fetching available goals:', error);
@@ -98,9 +98,9 @@ function Goals() {
             <div className='SuggestedGoals'>
                 <div className='SuggestedGoalsContent'>
                     <h2> Personalized Suggested Goals</h2>
-                        <AddGoalsList goals={personalizedGoals} setActiveGoals={setActiveGoals}/>
                 </div>
                 <div className='SuggestedList'>
+                    <AddGoalsList goals={personalizedGoals} setActiveGoals={setActiveGoals}/>
                 </div>
             </div>
             <div className='AddGoals'>

@@ -511,6 +511,18 @@ def remove_goal(userId, goalId):
         return jsonify({'error at remove_goal': str(e)}), 500
 
 
+@app.route('/similargoals/<similarId>', methods=['POST'])
+def check_for_shared_goal(similarId):
+    similarUser = User.query.get(similarId)
+    user_goal_json = request.get_json()
+    user_goal_id = user_goal_json['id']
+    goal = Goals.query.get(user_goal_id)
+    if goal in similarUser.goals:
+        return 'true'
+    else:
+        return 'false'
+
+
 # Helper Functions
 """
 helper to post the transaction data found by [aggregate_user_data] into an associated Transaction table
