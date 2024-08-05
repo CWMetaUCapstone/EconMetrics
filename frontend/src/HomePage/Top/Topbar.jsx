@@ -21,7 +21,7 @@ function Topbar() {
 
             <button className='signinbtn' onClick={() => navigate('/signin')}>Sign In</button>
             <button className='signupbtn' onClick={() => navigate('/signup')}>Sign Up</button>
-
+            <button className='AboutBtn' onClick={() => navigate(`/about`)}>About</button>
         </div>
     )
 }

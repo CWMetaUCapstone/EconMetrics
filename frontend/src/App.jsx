@@ -5,6 +5,7 @@ import SignIn from './HomePage/SignHandlers/SignIn';
 import CreateAccount from './ProfilePage/CreateAccount'
 import SearchResults from './SearchPage/SearchResults';
 import Goals from './GoalPage/Goals';
+import About from './AboutPage/About'
 import './App.css'
 
 function App() {
@@ -23,6 +24,8 @@ function App() {
         <Route path="/search/:searchTerm" element={<SearchResults/>}/>
         <Route path="/profile/:userId/search/:searchTerm" element={<SearchResults/>}/>
         <Route path = "/goals/:userId" element={<Goals/>}/>
+        <Route path="/about" element={<About/>}/>
+        <Route path="/about/:userId" element={<About/>}/>
       </Routes>
     </BrowserRouter>
   )

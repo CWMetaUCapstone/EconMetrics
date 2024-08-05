@@ -54,6 +54,7 @@ button {
 }
 
 .signupbtn {
+    margin-right: .5%;
     background-color: #36454f;
     color: #f7f9fb;
 }

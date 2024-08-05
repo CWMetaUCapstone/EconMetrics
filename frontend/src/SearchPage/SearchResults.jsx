@@ -14,6 +14,8 @@ function SearchResults() {
     const { userId, searchTerm } = useParams();
     const [users, setUsers] = useState([]);
 
+    console.log('hi', userId)
+
     const [userColumnDefs, setUserColumnDefs] = useState([
         { field: "city", headerName: "City", cellRenderer: 'agGroupCellRenderer'},
         { field: "salary", headerName: "Salary" },

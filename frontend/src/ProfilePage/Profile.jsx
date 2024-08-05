@@ -115,11 +115,11 @@ function Profile() {
     })
 
     useEffect(() => {
-        if(mostRecentTransId != 0){
+        console.log(mostRecentTransId)
+        if(mostRecentTransId){
             setPieSrc(`../../public/pie_chart_${userId}_${mostRecentTransId}.png`);
         }
-    }, [mostRecentTransId]);
-
+    }, [transactions, mostRecentTransId]);
     useEffect(() => {
         // retrieve and set svg src and selected options from localStorage if there's data saved
         const savedOptions = localStorage.getItem('selectedOptions');
@@ -330,6 +330,7 @@ function Profile() {
                         <h4>Your Expenditure Breakdown</h4>
                     </div>
                     <div className='piePlot'> 
+                    { console.log(pieSrc)}
                         <img src={pieSrc}/>
                     </div>
                     <div className='graphSelect'>

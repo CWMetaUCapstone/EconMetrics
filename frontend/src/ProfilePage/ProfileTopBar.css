@@ -6,6 +6,7 @@ button {
 }
 
 .LogOutBtn {
+    margin-right: .5%;
     background-color: #36454f;
     color: #f7f9fb;
 }
@@ -34,6 +35,16 @@ button {
 
 .ProfileBtn:hover {
     background-color: #bec5cb;
+    cursor: pointer;
+}
+
+.AboutBtn {
+    background-color:#8fc0c7;
+    color:#f7f9fb
+}
+
+.AboutBtn:hover {
+    background-color: #75acb4;
     cursor: pointer;
 }
 
@@ -71,3 +82,4 @@ button {
     margin-right: 20%;
     cursor: pointer;
 }
+
